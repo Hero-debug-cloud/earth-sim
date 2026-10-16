@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hybrid ERL · Evolutionary Reinforcement Learning</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+  <!-- Top Navigation & Global Controls -->
+  <header>
+    <div class="logo-group">
+      <span class="logo-badge" style="background: linear-gradient(135deg, #8b5cf6, #06b6d4);">HYBRID ERL</span>
+      <span class="title">Evolutionary Reinforcement Learning</span>
+    </div>
+
+    <!-- View Switcher Tabs -->
+    <div class="nav-tabs">
+      <button class="tab-btn" data-view="world">🌍 Population World</button>
+      <button class="tab-btn" data-view="neural">🧠 Champion Brain</button>
+      <button class="tab-btn active" data-view="split">⚡ Split (Both)</button>
+      <a href="/phase2" class="tab-btn" style="text-decoration: none; display: flex; align-items: center; color: var(--text-main);">🏕️ Living Hero</a>
+    </div>
+
+    <!-- Controls -->
+    <div class="controls-group">
+      <div class="speed-control">
+        <span>Speed:</span>
+        <input type="range" id="speed-slider" min="1" max="25" value="6" step="1">
+        <span id="speed-label">6x</span>
+      </div>
+      <button id="btn-play-pause" class="btn btn-primary">⏸ Pause</button>
+      <button id="btn-step" class="btn">⏭ Step</button>
+      <button id="btn-reset" class="btn">🔄 Reset</button>
+    </div>
+  </header>
+
+  <!-- Live Status Bar -->
+  <div class="status-bar">
+    <div class="status-tags">
+      <div class="tag">
+        <span class="tag-label">Engine:</span>
+        <span id="connection-status" class="tag-val" style="color: #10b981;">Connecting...</span>
+      </div>
+      <div class="tag">
+        <span class="tag-label">Generation:</span>
+        <span id="stat-gen" class="tag-val" style="color: #38bdf8;">1</span>
+      </div>
+      <div class="tag">
+        <span class="tag-label">Lifetime Tick:</span>
+        <span id="stat-tick" class="tag-val">0 / 120</span>
+      </div>
+      <div class="tag">
+        <span class="tag-label">🏆 Top Food:</span>
+        <span id="stat-top-food" class="tag-val" style="color: #facc15;">0</span>
+      </div>
+      <div class="tag">
+        <span class="tag-label">Avg Food:</span>
+        <span id="stat-avg-food" class="tag-val">0.0</span>
+      </div>
+      <div class="tag">
+        <span class="tag-label">🧬 Dominant Lineage:</span>
+        <span id="stat-lineage" class="tag-val" style="color: #c084fc;">None</span>
+      </div>
+    </div>
+
+    <!-- Quick Direct Links -->
+    <div class="status-tags">
+      <span class="tag-label">Direct Views:</span>
+      <a href="/" style="color: var(--accent-cyan); text-decoration: none; font-size: 0.8rem; margin-right: 8px;">🌍 / (World)</a>
+      <a href="/neural" style="color: var(--accent-purple); text-decoration: none; font-size: 0.8rem; margin-right: 8px;">🧠 /neural (Brain)</a>
+      <a href="/phase2" style="color: var(--accent-green); text-decoration: none; font-size: 0.8rem;">🏕️ /phase2 (Living Hero)</a>
+    </div>
+  </div>
+
+  <!-- Main Viewports -->
+  <main id="main-content">
+
+    <!-- View 1: Population Grid -->
+    <section id="sec-world" class="view-section">
+      <div class="section-header">
+        <h2>🌍 Population Grid (8 Learning Agents)</h2>
+        <span style="font-size: 0.8rem; color: var(--text-muted);">🟢 Food | 🔴 Hazard | 👑 Champion</span>
+      </div>
+
+      <div id="world-container" class="view-content">
+        <!-- Population Leaderboard Card -->
+        <div class="creature-card" style="min-width: 200px; max-height: 220px; overflow-y: auto;">
+          <div style="font-weight: 600; color: #fff; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 4px; display: flex; justify-content: space-between;">
+            <span>Lineages (Population)</span>
+            <span style="color: #facc15;">Food</span>
+          </div>
+          <div id="leaderboard-list" style="display: flex; flex-direction: column; gap: 4px; margin-top: 4px;">
+            <!-- Rendered by JS -->
+          </div>
+        </div>
+
+        <!-- Canvas -->
+        <canvas id="world-canvas"></canvas>
+      </div>
+    </section>
+
+    <!-- View 2: Champion Neural Network -->
+    <section id="sec-brain" class="view-section">
+      <div class="section-header">
+        <h2>🧠 Neural Network of the Current Champion</h2>
+        <span id="champ-header-lineage" style="font-size: 0.8rem; color: #facc15;">Lineage: A0</span>
+      </div>
+
+      <div id="brain-container" class="view-content">
+        <canvas id="brain-canvas"></canvas>
+      </div>
+    </section>
+
+  </main>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Phase 2: The Hero's Life Cycle & Homeostasis</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <style>
+    .phase2-grid {
+      display: grid;
+      grid-template-columns: 1fr 380px;
+      gap: 20px;
+      padding: 24px;
+      max-width: 1400px;
+      margin: 0 auto;
+      width: 100%;
+    }
+    .panel {
+      background: var(--panel-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .meter-row {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .meter-label-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+    .meter-bar {
+      height: 10px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 6px;
+      overflow: hidden;
+      position: relative;
+    }
+    .meter-fill {
+      height: 100%;
+      border-radius: 6px;
+      transition: width 0.15s ease-out;
+    }
+    .backpack-slots {
+      display: flex;
+      gap: 10px;
+      margin-top: 8px;
+    }
+    .backpack-slot {
+      width: 48px;
+      height: 48px;
+      border: 2px dashed rgba(255, 255, 255, 0.2);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      background: rgba(0, 0, 0, 0.3);
+    }
+    .backpack-slot.filled {
+      border: 2px solid var(--accent-green);
+      background: rgba(16, 185, 129, 0.1);
+    }
+    .goal-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      width: fit-content;
+    }
+    .event-log {
+      max-height: 180px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-family: monospace;
+      font-size: 0.8rem;
+    }
+    .event-item {
+      padding: 4px 8px;
+      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--text-main);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Navigation -->
+  <header>
+    <div class="logo-group">
+      <span class="logo-badge" style="background: linear-gradient(135deg, #059669, #0284c7);">PHASE 2</span>
+      <span class="title">The Hero's Life Cycle & Homeostasis</span>
+    </div>
+
+    <!-- View Switcher -->
+    <div class="nav-tabs">
+      <a href="/" class="tab-btn" style="text-decoration: none;">🌍 Population World</a>
+      <a href="/neural" class="tab-btn" style="text-decoration: none;">🧠 Champion Brain</a>
+      <a href="/phase2" class="tab-btn active" style="text-decoration: none;">🏕️ Living Hero</a>
+    </div>
+
+    <!-- Controls -->
+    <div class="controls-group">
+      <div class="speed-control">
+        <span>Speed:</span>
+        <input type="range" id="speed-slider" min="1" max="25" value="6" step="1">
+        <span id="speed-label">6x</span>
+      </div>
+      <button id="btn-play-pause" class="btn btn-primary">⏸ Pause</button>
+      <button id="btn-step" class="btn">⏭ Step</button>
+      <button id="btn-reset" class="btn">🔄 Reset</button>
+    </div>
+  </header>
+
+  <!-- Live Status Bar -->
+  <div class="status-bar">
+    <div class="status-tags">
+      <div class="tag">
+        <span class="tag-label">Engine:</span>
+        <span id="connection-status" class="tag-val" style="color: #10b981;">Connecting...</span>
+      </div>
+      <div class="tag">
+        <span class="tag-label">Time:</span>
+        <span id="stat-time" class="tag-val" style="color: #facc15;">Day 1 · Morning</span>
+      </div>
+      <div class="tag">
+        <span class="tag-label">Tick:</span>
+        <span id="stat-tick" class="tag-val">0</span>
+      </div>
+      <div class="tag">
+        <span class="tag-label">Action:</span>
+        <span id="stat-action" class="tag-val" style="color: #38bdf8;">Awakening</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Grid & Telemetry -->
+  <main class="phase2-grid">
+    
+    <!-- Left: Canvas Area -->
+    <section class="panel" style="align-items: center; justify-content: center;">
+      <div style="width: 100%; display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+        <h2 style="font-size: 1.1rem; color: #fff;">🌍 Village Terrain (14×14)</h2>
+        <span style="font-size: 0.8rem; color: var(--text-muted);">⛺ Home · 💧 Lake · 🍏 Food · 🌲 Timber · ⚠️ Hazard</span>
+      </div>
+      <canvas id="village-canvas" width="560" height="560" style="background: #0d131f; border-radius: 8px; border: 1px solid var(--border-color);"></canvas>
+    </section>
+
+    <!-- Right: Vitals, Backpack & Stockpile HUD -->
+    <section class="panel">
+      <!-- Active Goal -->
+      <div>
+        <span style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">Active Cognitive Drive</span>
+        <div style="margin-top: 6px;">
+          <span id="goal-badge" class="goal-badge" style="background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid #10b981;">
+            🍏 FORAGING & HARVESTING
+          </span>
+        </div>
+      </div>
+
+      <!-- Vitals Gauges -->
+      <div style="display: flex; flex-direction: column; gap: 12px;">
+        <span style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">Homeostasis Vitals</span>
+        
+        <!-- Health -->
+        <div class="meter-row">
+          <div class="meter-label-row">
+            <span>❤️ Health</span>
+            <span id="val-health">100%</span>
+          </div>
+          <div class="meter-bar">
+            <div id="bar-health" class="meter-fill" style="width: 100%; background: #10b981;"></div>
+          </div>
+        </div>
+
+        <!-- Thirst -->
+        <div class="meter-row">
+          <div class="meter-label-row">
+            <span>💧 Thirst</span>
+            <span id="val-thirst">0%</span>
+          </div>
+          <div class="meter-bar">
+            <div id="bar-thirst" class="meter-fill" style="width: 0%; background: #06b6d4;"></div>
+          </div>
+        </div>
+
+        <!-- Hunger -->
+        <div class="meter-row">
+          <div class="meter-label-row">
+            <span>🍽️ Hunger</span>
+            <span id="val-hunger">0%</span>
+          </div>
+          <div class="meter-bar">
+            <div id="bar-hunger" class="meter-fill" style="width: 0%; background: #facc15;"></div>
+          </div>
+        </div>
+
+        <!-- Energy -->
+        <div class="meter-row">
+          <div class="meter-label-row">
+            <span>⚡ Energy</span>
+            <span id="val-energy">100%</span>
+          </div>
+          <div class="meter-bar">
+            <div id="bar-energy" class="meter-fill" style="width: 100%; background: #10b981;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Backpack Slots -->
+      <div>
+        <div style="display: flex; justify-content: space-between; font-size: 0.8rem;">
+          <span style="color: var(--text-muted); text-transform: uppercase; font-weight: 600;">Backpack Storage</span>
+          <span id="backpack-capacity-text" style="color: #38bdf8; font-weight: 600;">0 / 5</span>
+        </div>
+        <div id="backpack-container" class="backpack-slots">
+          <div class="backpack-slot">░</div>
+          <div class="backpack-slot">░</div>
+          <div class="backpack-slot">░</div>
+          <div class="backpack-slot">░</div>
+          <div class="backpack-slot">░</div>
+        </div>
+      </div>
+
+      <!-- Village Stockpile -->
+      <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px;">
+        <span style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">⛺ Village Stockpile at Home</span>
+        <div style="display: flex; gap: 20px; margin-top: 8px;">
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <span style="font-size: 1.3rem;">🍏</span>
+            <div>
+              <div style="font-size: 0.75rem; color: var(--text-muted);">Food</div>
+              <div id="stockpile-food" style="font-size: 1.1rem; font-weight: 700; color: #4ade80;">0</div>
+            </div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <span style="font-size: 1.3rem;">🪵</span>
+            <div>
+              <div style="font-size: 0.75rem; color: var(--text-muted);">Wood</div>
+              <div id="stockpile-wood" style="font-size: 1.1rem; font-weight: 700; color: #fbbf24;">0</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Live Cognitive Events Feed -->
+      <div>
+        <span style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">Cognitive Events Feed</span>
+        <div id="event-log-container" class="event-log" style="margin-top: 6px;">
+          <div class="event-item">Expedition initialized. Hero awoke at Home Base ⛺</div>
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+
+  <script src="/static/phase2.js"></script>
+</body>
+</html>
