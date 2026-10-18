@@ -1,387 +1,248 @@
 import random
+from typing import List, Tuple, Dict, Any, Optional
 import numpy as np
-from enum import IntEnum
 
-class TileType(IntEnum):
-    DIRT = 0
-    WATER = 1
-    GRASS = 2
-    TREE = 3
-    FIRE = 4
-    ASH = 5
-    ROCK = 6
+class HazardBeast:
+    """A dynamic wandering hazard entity that patrols the world."""
+    def __init__(self, pos: Tuple[int, int], move_interval: int = 2):
+        self.pos = pos
+        self.move_interval = move_interval
+        self.tick_counter = 0
 
-class Creature:
-    def __init__(self, x: int, y: int, generation: int = 1):
-        self.x = x
-        self.y = y
-        self.generation = generation
-        self.health = 100.0
-        self.thirst = 15.0   # 0 = not thirsty, 100 = dying of thirst
-        self.energy = 100.0  # 100 = full energy, 0 = exhausted
-        self.last_action = f"Gen {generation} Spawned"
-        self.is_alive = True
-        self.dead_ticks = 0
+    def step(self, grid_size: int, blocked: set[Tuple[int, int]]) -> Tuple[int, int]:
+        self.tick_counter += 1
+        if self.tick_counter < self.move_interval:
+            return self.pos
 
-    def update_vitals(self):
-        if not self.is_alive:
-            self.dead_ticks += 1
-            return
-        # Passive metabolism
-        self.thirst = min(100.0, self.thirst + 0.4)
-        self.energy = max(0.0, self.energy - 0.2)
+        self.tick_counter = 0
+        r, c = self.pos
+        possible_moves = []
+        for dr, dc in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
+            nr, nc = r + dr, c + dc
+            if 0 <= nr < grid_size and 0 <= nc < grid_size and (nr, nc) not in blocked:
+                possible_moves.append((nr, nc))
 
-        # Health consequences
-        if self.thirst >= 85.0:
-            self.health -= 2.0
-        if self.energy <= 5.0:
-            self.health -= 1.0
+        if possible_moves:
+            self.pos = random.choice(possible_moves)
+        return self.pos
 
-        if self.health <= 0:
-            self.health = 0
-            self.is_alive = False
-            self.last_action = f"Gen {self.generation} Died"
-            self.dead_ticks = 0
 
-class World:
-    def __init__(self, size: int = 28):
+class CivilizationWorld:
+    """
+    Unified Persistent World:
+    - Home Base ⛺ (1, 1): Shelter and central granary stockpile
+    - Water Lake 💧: Natural hydration spring
+    - Berry Bushes 🍏: Harvestable food with regrowth cooldowns (barren: 🌱)
+    - Timber Trees 🌲: Harvestable wood with regrowth cooldowns (stump: 🪵)
+    - Dynamic Moving Hazards ⚠️: Wandering predator entities
+    - Day/Night Cycle & Passive Ecology
+    """
+    def __init__(
+        self,
+        size: int = 14,
+        num_bushes: int = 5,
+        num_trees: int = 5,
+        num_hazards: int = 3,
+        food_cooldown: int = 35,
+        tree_cooldown: int = 60,
+        hazard_speed: int = 2,
+        home_pos: Tuple[int, int] = (1, 1),
+        water_center: Tuple[int, int] = (7, 7)
+    ):
         self.size = size
-        self.grid = np.zeros((size, size), dtype=int)
-        self.fuel = np.zeros((size, size), dtype=int)
-        self.moisture = np.zeros((size, size), dtype=float)
-        self.ticks = 0
-        self.creature = Creature(size // 2, size // 2)
-        self.generate_initial_terrain()
+        self.home_pos = home_pos
+        self.water_center = water_center
+        self.num_bushes = num_bushes
+        self.num_trees = num_trees
+        self.num_hazards = num_hazards
+        self.food_cooldown = food_cooldown
+        self.tree_cooldown = tree_cooldown
+        self.hazard_speed = hazard_speed
 
-    def generate_initial_terrain(self):
-        """Build initial earth layout: lake, soil, rocks, grass, and forest."""
-        self.grid.fill(TileType.DIRT)
-        self.fuel.fill(0)
-        self.moisture.fill(0.0)
+        self.stockpile = {"food": 0, "wood": 0}
+        self.emergency_rations_eaten = 0
+        self.tick_count = 0
 
-        center = self.size // 2
+        self.reset_world()
 
-        # Create a winding river or lake in the center
-        for r in range(self.size):
-            for c in range(self.size):
-                dist_center = np.sqrt((r - center)**2 + (c - center)**2)
-                # Lake in center
-                if dist_center < 4.5:
-                    self.grid[r, c] = TileType.WATER
-                # Meandering river
-                elif abs(c - (center + int(np.sin(r / 3.0) * 4))) <= 1:
-                    self.grid[r, c] = TileType.WATER
+    def reset_world(self):
+        # 1. Water Lake
+        wr, wc = self.water_center
+        self.water_tiles = [
+            (wr + dr, wc + dc)
+            for dr, dc in [(0, 0), (0, 1), (1, 0), (1, 1), (0, -1), (-1, 0)]
+            if 0 <= wr + dr < self.size and 0 <= wc + dc < self.size
+        ]
 
-        # Place some rock clusters
-        for _ in range(6):
-            rx, ry = random.randint(2, self.size - 3), random.randint(2, self.size - 3)
-            if self.grid[rx, ry] != TileType.WATER:
-                for dx in (-1, 0, 1):
-                    for dy in (-1, 0, 1):
-                        if random.random() < 0.6 and 0 <= rx+dx < self.size and 0 <= ry+dy < self.size:
-                            if self.grid[rx+dx, ry+dy] != TileType.WATER:
-                                self.grid[rx+dx, ry+dy] = TileType.ROCK
-
-        # Calculate initial moisture from water
-        self._spread_moisture()
-
-        # Grow grass and trees where soil is moist
-        for r in range(self.size):
-            for c in range(self.size):
-                if self.grid[r, c] == TileType.DIRT and self.moisture[r, c] > 0.2:
-                    if random.random() < 0.7:
-                        self.grid[r, c] = TileType.GRASS
-                        if self.moisture[r, c] > 0.5 and random.random() < 0.4:
-                            self.grid[r, c] = TileType.TREE
-                            self.fuel[r, c] = random.randint(40, 80)
-
-        # Spawn guaranteed active natural campfire / wildfires from the start!
-        veg_locs = np.argwhere((self.grid == TileType.TREE) | (self.grid == TileType.GRASS))
-        if len(veg_locs) > 0:
-            for _ in range(2):
-                idx = random.randint(0, len(veg_locs) - 1)
-                fx, fy = int(veg_locs[idx][0]), int(veg_locs[idx][1])
-                for dfx in (-1, 0, 1):
-                    for dfy in (-1, 0, 1):
-                        nr, nc = fx + dfx, fy + dfy
-                        if 0 <= nr < self.size and 0 <= nc < self.size and self.grid[nr, nc] != TileType.WATER:
-                            self.grid[nr, nc] = TileType.FIRE
-                            self.fuel[nr, nc] = random.randint(80, 150)
-
-        # Place creature on safe grass/dirt tile away from fire
-        for _ in range(100):
-            cx, cy = random.randint(2, self.size - 3), random.randint(2, self.size - 3)
-            if self.grid[cx, cy] in (TileType.GRASS, TileType.DIRT) and self.grid[cx, cy] != TileType.FIRE:
-                self.creature = Creature(cx, cy)
-                break
-
-    def _spread_moisture(self):
-        """Moisture radiates outward from water tiles."""
-        self.moisture.fill(0.0)
-        water_locs = np.argwhere(self.grid == TileType.WATER)
-        for wr, wc in water_locs:
-            for dr in range(-4, 5):
-                for dc in range(-4, 5):
-                    nr, nc = wr + dr, wc + dc
-                    if 0 <= nr < self.size and 0 <= nc < self.size:
-                        dist = np.sqrt(dr*dr + dc*dc)
-                        if dist <= 4.0:
-                            self.moisture[nr, nc] = max(self.moisture[nr, nc], 1.0 - (dist / 4.5))
-
-    def spark_fire(self, r: int, c: int):
-        """Ignite a 3x3 wildfire cluster with high fuel so it blazes noticeably."""
-        for dr in (-1, 0, 1):
-            for dc in (-1, 0, 1):
-                nr, nc = r + dr, c + dc
-                if 0 <= nr < self.size and 0 <= nc < self.size:
-                    if self.grid[nr, nc] != TileType.WATER and self.grid[nr, nc] != TileType.ROCK:
-                        self.grid[nr, nc] = TileType.FIRE
-                        self.fuel[nr, nc] = random.randint(60, 120)
-
-    def trigger_lightning(self):
-        """Random lightning strike igniting a forest fire."""
-        tree_locs = np.argwhere(self.grid == TileType.TREE)
-        if len(tree_locs) > 0:
-            target = tree_locs[random.randint(0, len(tree_locs) - 1)]
-            self.spark_fire(int(target[0]), int(target[1]))
-            return int(target[0]), int(target[1])
-        return None
-
-    def add_water(self, r: int, c: int):
-        """Add water tile cluster."""
-        for dr in (-1, 0, 1):
-            for dc in (-1, 0, 1):
-                nr, nc = r + dr, c + dc
-                if 0 <= nr < self.size and 0 <= nc < self.size:
-                    self.grid[nr, nc] = TileType.WATER
-                    self.fuel[nr, nc] = 0
-        self._spread_moisture()
-
-    def plant_tree(self, r: int, c: int):
-        """Plant a cluster of trees."""
-        for dr in (-1, 0, 1):
-            for dc in (-1, 0, 1):
-                nr, nc = r + dr, c + dc
-                if 0 <= nr < self.size and 0 <= nc < self.size:
-                    if self.grid[nr, nc] in (TileType.DIRT, TileType.GRASS):
-                        self.grid[nr, nc] = TileType.TREE
-                        self.fuel[nr, nc] = random.randint(40, 80)
-
-    def step(self, creature_action: int):
-        """Advance the world by one tick with elemental physics and creature action."""
-        self.ticks += 1
-        new_grid = self.grid.copy()
-        new_fuel = self.fuel.copy()
-
-        # 1. Elemental Physics & Cellular Automata
-        for r in range(self.size):
-            for c in range(self.size):
-                tile = self.grid[r, c]
-
-                # Fire Physics
-                if tile == TileType.FIRE:
-                    new_fuel[r, c] -= 1
-                    # Check neighboring tiles to spread fire
-                    neighbors = [(-1, 0), (1, 0), (0, -1), (0, 1)]
-                    for dr, dc in neighbors:
-                        nr, nc = r + dr, c + dc
-                        if 0 <= nr < self.size and 0 <= nc < self.size:
-                            target = self.grid[nr, nc]
-                            # Extinguished by water
-                            if target == TileType.WATER:
-                                new_grid[r, c] = TileType.ASH
-                                new_fuel[r, c] = 0
-                                break
-                            # Spread to tree or grass
-                            if target == TileType.TREE and random.random() < 0.35:
-                                new_grid[nr, nc] = TileType.FIRE
-                                new_fuel[nr, nc] = random.randint(10, 20)
-                            elif target == TileType.GRASS and random.random() < 0.20:
-                                new_grid[nr, nc] = TileType.FIRE
-                                new_fuel[nr, nc] = random.randint(4, 8)
-
-                    # Exhausted fuel turns to ash
-                    if new_fuel[r, c] <= 0:
-                        new_grid[r, c] = TileType.ASH
-
-                # Ash slowly decomposes into fertile soil / grass
-                elif tile == TileType.ASH:
-                    if random.random() < 0.04:
-                        new_grid[r, c] = TileType.GRASS if self.moisture[r, c] > 0.2 else TileType.DIRT
-
-                # Grass & Tree growth near moisture
-                elif tile == TileType.DIRT:
-                    if self.moisture[r, c] > 0.3 and random.random() < 0.03:
-                        new_grid[r, c] = TileType.GRASS
-                elif tile == TileType.GRASS:
-                    if self.moisture[r, c] > 0.6 and random.random() < 0.005:
-                        new_grid[r, c] = TileType.TREE
-                        new_fuel[r, c] = random.randint(15, 25)
-
-        self.grid = new_grid
-        self.fuel = new_fuel
-
-        # 2. Creature Sensory Feedback and Execution
-        self._execute_creature_action(creature_action)
-        self.creature.update_vitals()
-
-        # Check environmental hazards on creature
-        cx, cy = self.creature.x, self.creature.y
-        if self.grid[cx, cy] == TileType.FIRE:
-            self.creature.health -= 25.0
-            self.creature.last_action += " (Burned by Fire!)"
-
-        # Generational Auto-Respawn
-        if not self.creature.is_alive and self.creature.dead_ticks >= 6:
-            new_gen = self.creature.generation + 1
-            safe_spots = np.argwhere(((self.grid == TileType.GRASS) | (self.grid == TileType.DIRT)) & (self.grid != TileType.FIRE))
-            if len(safe_spots) > 0:
-                spot = safe_spots[random.randint(0, len(safe_spots) - 1)]
-                self.creature = Creature(int(spot[0]), int(spot[1]), generation=new_gen)
-                self.creature.last_action = f"Gen {new_gen} Reborn! 🌟"
-
-    def _execute_creature_action(self, action: int):
-        """
-        0: Idle/Rest
-        1: Move North (-1, 0)
-        2: Move South (1, 0)
-        3: Move West (0, -1)
-        4: Move East (0, 1)
-        5: Drink Water
-        6: Eat Berries / Forage
-        """
-        if not self.creature.is_alive:
-            return
-
-        actions = ["Rest", "Move North", "Move South", "Move West", "Move East", "Drink Water", "Forage / Eat"]
-        self.creature.last_action = actions[action] if action < len(actions) else "Idle"
-
-        moves = {
-            1: (-1, 0),
-            2: (1, 0),
-            3: (0, -1),
-            4: (0, 1)
+        # 2. Home Shelter Zone
+        hr, hc = self.home_pos
+        self.home_zone = {
+            (hr + dr, hc + dc)
+            for dr in (-1, 0, 1) for dc in (-1, 0, 1)
+            if 0 <= hr + dr < self.size and 0 <= hc + dc < self.size
         }
 
-        if action in moves:
-            dr, dc = moves[action]
-            nx, ny = self.creature.x + dr, self.creature.y + dc
-            if 0 <= nx < self.size and 0 <= ny < self.size:
-                # Don't walk directly into deep water or rocks without swim/climb
-                if self.grid[nx, ny] != TileType.ROCK:
-                    self.creature.x = nx
-                    self.creature.y = ny
-                    self.creature.energy = max(0.0, self.creature.energy - 0.5)
+        blocked = set(self.water_tiles) | self.home_zone
+        available_coords = [
+            (r, c)
+            for r in range(self.size)
+            for c in range(self.size)
+            if (r, c) not in blocked
+        ]
+        random.shuffle(available_coords)
 
-        elif action == 0:  # Rest
-            self.creature.energy = min(100.0, self.creature.energy + 2.0)
+        # 3. Dynamic Moving Hazards
+        hazard_coords = available_coords[:self.num_hazards]
+        available_coords = available_coords[self.num_hazards:]
+        self.hazard_entities = [HazardBeast(pos=pt, move_interval=self.hazard_speed) for pt in hazard_coords]
 
-        elif action == 5:  # Drink
-            # Check adjacent tiles or current tile for water
-            cx, cy = self.creature.x, self.creature.y
-            has_water = self.grid[cx, cy] == TileType.WATER
-            for dx, dy in ((-1,0), (1,0), (0,-1), (0,1)):
-                nx, ny = cx + dx, cy + dy
-                if 0 <= nx < self.size and 0 <= ny < self.size and self.grid[nx, ny] == TileType.WATER:
-                    has_water = True
-                    break
-            if has_water:
-                self.creature.thirst = max(0.0, self.creature.thirst - 35.0)
-                self.creature.last_action = "Drank Water 💧"
-            else:
-                self.creature.last_action = "Tried to Drink (No water nearby)"
+        # 4. Bushes (Food)
+        bush_coords = available_coords[:self.num_bushes]
+        available_coords = available_coords[self.num_bushes:]
+        self.bushes = [{"pos": pt, "is_ripe": True, "timer": 0} for pt in bush_coords]
 
-        elif action == 6:  # Forage / Eat
-            cx, cy = self.creature.x, self.creature.y
-            if self.grid[cx, cy] in (TileType.GRASS, TileType.TREE):
-                self.creature.energy = min(100.0, self.creature.energy + 15.0)
-                self.creature.health = min(100.0, self.creature.health + 5.0)
-                self.creature.last_action = "Ate Wild Flora 🌱"
+        # 5. Trees (Wood)
+        tree_coords = available_coords[:self.num_trees]
+        self.tree_entries = [{"pos": pt, "is_mature": True, "timer": 0} for pt in tree_coords]
 
-    def get_creature_sensors(self) -> np.ndarray:
+    @property
+    def hazards(self) -> List[Tuple[int, int]]:
+        return [h.pos for h in self.hazard_entities]
+
+    @property
+    def ripe_food_positions(self) -> List[Tuple[int, int]]:
+        return [b["pos"] for b in self.bushes if b["is_ripe"]]
+
+    @property
+    def mature_tree_positions(self) -> List[Tuple[int, int]]:
+        return [t["pos"] for t in self.tree_entries if t["is_mature"]]
+
+    def is_water(self, pos: Tuple[int, int]) -> bool:
+        return pos in self.water_tiles
+
+    def is_adjacent_to_water(self, pos: Tuple[int, int]) -> bool:
+        r, c = pos
+        for dr, dc in ((-1, 0), (1, 0), (0, -1), (0, 1)):
+            if (r + dr, c + dc) in self.water_tiles:
+                return True
+        return False
+
+    def is_home(self, pos: Tuple[int, int]) -> bool:
+        return pos == self.home_pos
+
+    def tick_ecology(self):
+        """Advances ecological regrowth and moves dynamic hazards."""
+        self.tick_count += 1
+
+        # Regrow bushes
+        for b in self.bushes:
+            if not b["is_ripe"]:
+                b["timer"] -= 1
+                if b["timer"] <= 0:
+                    b["is_ripe"] = True
+                    b["timer"] = 0
+
+        # Regrow trees
+        for t in self.tree_entries:
+            if not t["is_mature"]:
+                t["timer"] -= 1
+                if t["timer"] <= 0:
+                    t["is_mature"] = True
+                    t["timer"] = 0
+
+        # Move hazards (cannot enter home base or lake)
+        impassable_for_hazards = set(self.water_tiles) | {self.home_pos}
+        for h in self.hazard_entities:
+            h.step(self.size, impassable_for_hazards)
+
+    def get_observation(
+        self,
+        agent_pos: Tuple[int, int],
+        target_pos: Tuple[int, int],
+        energy: float = 1.0,
+        frustration: float = 0.0
+    ) -> np.ndarray:
         """
-        Sensory inputs for the neural network (8 normalized features):
-        0: Thirst (0.0 to 1.0)
-        1: Energy (0.0 to 1.0)
-        2: Health (0.0 to 1.0)
-        3: Water proximity direction X (-1.0 to 1.0)
-        4: Water proximity direction Y (-1.0 to 1.0)
-        5: Fire danger proximity (0.0 = safe, 1.0 = adjacent fire)
-        6: Food/Tree proximity direction X (-1.0 to 1.0)
-        7: Food/Tree proximity direction Y (-1.0 to 1.0)
+        Sensory input tensor for the recurrent policy network:
+        [target_dx, target_dy, hazard_dx, hazard_dy, energy, frustration]
         """
-        cx, cy = self.creature.x, self.creature.y
-        thirst_norm = self.creature.thirst / 100.0
-        energy_norm = self.creature.energy / 100.0
-        health_norm = self.creature.health / 100.0
+        ar, ac = agent_pos
+        tr, tc = target_pos
 
-        # Find nearest water
-        water_coords = np.argwhere(self.grid == TileType.WATER)
-        if len(water_coords) > 0:
-            dists = np.sqrt((water_coords[:, 0] - cx)**2 + (water_coords[:, 1] - cy)**2)
-            idx = np.argmin(dists)
-            closest_w = water_coords[idx]
-            water_dx = np.clip((closest_w[0] - cx) / 10.0, -1.0, 1.0)
-            water_dy = np.clip((closest_w[1] - cy) / 10.0, -1.0, 1.0)
-        else:
-            water_dx, water_dy = 0.0, 0.0
+        target_dx = float(np.clip((tr - ar) / float(self.size), -1.0, 1.0))
+        target_dy = float(np.clip((tc - ac) / float(self.size), -1.0, 1.0))
 
-        # Find nearest fire
-        fire_coords = np.argwhere(self.grid == TileType.FIRE)
-        if len(fire_coords) > 0:
-            dists = np.sqrt((fire_coords[:, 0] - cx)**2 + (fire_coords[:, 1] - cy)**2)
-            min_dist = np.min(dists)
-            fire_danger = max(0.0, 1.0 - (min_dist / 6.0))
+        # Dynamic distance to nearest moving hazard
+        current_hazards = self.hazards
+        if current_hazards:
+            dists = [abs(hr - ar) + abs(hc - ac) for hr, hc in current_hazards]
+            closest_h = current_hazards[int(np.argmin(dists))]
+            hazard_dx = float(np.clip((closest_h[0] - ar) / float(self.size), -1.0, 1.0))
+            hazard_dy = float(np.clip((closest_h[1] - ac) / float(self.size), -1.0, 1.0))
         else:
-            fire_danger = 0.0
-
-        # Find nearest tree/food
-        tree_coords = np.argwhere(self.grid == TileType.TREE)
-        if len(tree_coords) > 0:
-            dists = np.sqrt((tree_coords[:, 0] - cx)**2 + (tree_coords[:, 1] - cy)**2)
-            idx = np.argmin(dists)
-            closest_t = tree_coords[idx]
-            food_dx = np.clip((closest_t[0] - cx) / 10.0, -1.0, 1.0)
-            food_dy = np.clip((closest_t[1] - cy) / 10.0, -1.0, 1.0)
-        else:
-            food_dx, food_dy = 0.0, 0.0
+            hazard_dx, hazard_dy = 0.0, 0.0
 
         return np.array([
-            thirst_norm,
-            energy_norm,
-            health_norm,
-            water_dx,
-            water_dy,
-            fire_danger,
-            food_dx,
-            food_dy
+            target_dx,
+            target_dy,
+            hazard_dx,
+            hazard_dy,
+            float(np.clip(energy, 0.0, 1.0)),
+            float(np.clip(frustration, 0.0, 1.0))
         ], dtype=np.float32)
 
-    def get_state_summary(self):
-        """Summary for frontend."""
-        unique, counts = np.unique(self.grid, return_counts=True)
-        counts_dict = dict(zip(unique.tolist(), counts.tolist()))
-        return {
-            "tick": self.ticks,
-            "grid_size": self.size,
-            "grid": self.grid.tolist(),
-            "creature": {
-                "x": self.creature.x,
-                "y": self.creature.y,
-                "generation": self.creature.generation,
-                "health": round(self.creature.health, 1),
-                "thirst": round(self.creature.thirst, 1),
-                "energy": round(self.creature.energy, 1),
-                "last_action": self.creature.last_action,
-                "is_alive": self.creature.is_alive
-            },
-            "stats": {
-                "water": counts_dict.get(int(TileType.WATER), 0),
-                "grass": counts_dict.get(int(TileType.GRASS), 0),
-                "tree": counts_dict.get(int(TileType.TREE), 0),
-                "fire": counts_dict.get(int(TileType.FIRE), 0),
-                "ash": counts_dict.get(int(TileType.ASH), 0),
-                "rock": counts_dict.get(int(TileType.ROCK), 0),
-                "dirt": counts_dict.get(int(TileType.DIRT), 0)
-            }
-        }
+    def step_agent(self, current_pos: Tuple[int, int], action: int) -> Tuple[Tuple[int, int], Optional[str], bool]:
+        """
+        Executes hero movement, bounds checking, water blocking, and tile interactions.
+        Returns: (new_pos, event_string, hit_hazard_bool)
+        """
+        r, c = current_pos
+        moves = {0: (-1, 0), 1: (1, 0), 2: (0, -1), 3: (0, 1)}
+        dr, dc = moves.get(action, (0, 0))
+        nr, nc = r + dr, c + dc
+
+        # Wall clamp
+        nr = max(0, min(self.size - 1, nr))
+        nc = max(0, min(self.size - 1, nc))
+        new_pos = (nr, nc)
+
+        # Deep water is impassable
+        if self.is_water(new_pos):
+            new_pos = current_pos
+
+        # Check collision with dynamic hazards
+        hit_hazard = new_pos in self.hazards
+
+        # Interactions
+        event = None
+
+        # Check bush harvest
+        for b in self.bushes:
+            if b["pos"] == new_pos and b["is_ripe"]:
+                b["is_ripe"] = False
+                b["timer"] = self.food_cooldown
+                event = "HARVEST_FOOD"
+                break
+
+        # Check tree chop
+        if not event:
+            for t in self.tree_entries:
+                if t["pos"] == new_pos and t["is_mature"]:
+                    t["is_mature"] = False
+                    t["timer"] = self.tree_cooldown
+                    event = "HARVEST_WOOD"
+                    break
+
+        return new_pos, event, hit_hazard
+
+    def get_tod_name(self, ticks_per_day: int = 100) -> Tuple[int, str]:
+        day_num = (self.tick_count // ticks_per_day) + 1
+        day_tick = self.tick_count % ticks_per_day
+        if day_tick < 25:
+            return day_num, "Morning 🌅"
+        elif day_tick < 65:
+            return day_num, "Afternoon ☀️"
+        elif day_tick < 85:
+            return day_num, "Dusk 🌆"
+        else:
+            return day_num, "Night 🌙"

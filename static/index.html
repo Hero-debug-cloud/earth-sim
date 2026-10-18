@@ -3,34 +3,36 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Hybrid ERL · Evolutionary Reinforcement Learning</title>
+  <title>Civilization Platform · Living World & Neural Brain</title>
   <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
 
-  <!-- Top Navigation & Global Controls -->
+  <!-- Top Navigation & Evolution Controls -->
   <header>
     <div class="logo-group">
-      <span class="logo-badge" style="background: linear-gradient(135deg, #8b5cf6, #06b6d4);">HYBRID ERL</span>
-      <span class="title">Evolutionary Reinforcement Learning</span>
+      <span class="logo-badge">CIVILIZATION</span>
+      <span class="title">Persistent Living World & Neural Architecture</span>
     </div>
 
-    <!-- View Switcher Tabs -->
-    <div class="nav-tabs">
-      <button class="tab-btn" data-view="world">🌍 Population World</button>
-      <button class="tab-btn" data-view="neural">🧠 Champion Brain</button>
-      <button class="tab-btn active" data-view="split">⚡ Split (Both)</button>
-      <a href="/phase2" class="tab-btn" style="text-decoration: none; display: flex; align-items: center; color: var(--text-main);">🏕️ Living Hero</a>
-      <a href="/scarcity" class="tab-btn" style="text-decoration: none; display: flex; align-items: center; color: var(--text-main);">⚔️ 200-Hero Famine</a>
-    </div>
-
-    <!-- Controls -->
+    <!-- Central Evolution & Simulation Controls -->
     <div class="controls-group">
+      <!-- On-Demand Evolution Trigger -->
+      <div class="evolution-control">
+        <label for="evolve-gens-input" style="font-size: 0.78rem; color: var(--text-secondary); font-weight: 600;">Adapt:</label>
+        <input type="number" id="evolve-gens-input" min="1" max="100" value="10" style="width: 50px; text-align: center;">
+        <button id="btn-evolve" class="btn btn-evolve">🧬 Evolve</button>
+      </div>
+
+      <div class="divider-v"></div>
+
+      <!-- Playback Speed -->
       <div class="speed-control">
         <span>Speed:</span>
-        <input type="range" id="speed-slider" min="1" max="25" value="6" step="1">
-        <span id="speed-label">6x</span>
+        <input type="range" id="speed-slider" min="1" max="40" value="6" step="1">
+        <span id="speed-label" style="font-family: monospace; min-width: 24px;">6x</span>
       </div>
+
       <button id="btn-play-pause" class="btn btn-primary">⏸ Pause</button>
       <button id="btn-step" class="btn">⏭ Step</button>
       <button id="btn-reset" class="btn">🔄 Reset</button>
@@ -42,77 +44,175 @@
     <div class="status-tags">
       <div class="tag">
         <span class="tag-label">Engine:</span>
-        <span id="connection-status" class="tag-val" style="color: #10b981;">Connecting...</span>
+        <span id="connection-status" class="tag-val" style="color: var(--accent-emerald);">Connecting...</span>
       </div>
       <div class="tag">
         <span class="tag-label">Generation:</span>
         <span id="stat-gen" class="tag-val" style="color: #38bdf8;">1</span>
       </div>
       <div class="tag">
-        <span class="tag-label">Lifetime Tick:</span>
-        <span id="stat-tick" class="tag-val">0 / 120</span>
+        <span class="tag-label">Horizon:</span>
+        <span id="stat-time" class="tag-val">Day 1.0 · Morning 🌅</span>
       </div>
       <div class="tag">
-        <span class="tag-label">🏆 Top Food:</span>
-        <span id="stat-top-food" class="tag-val" style="color: #facc15;">0</span>
+        <span class="tag-label">Granary:</span>
+        <span id="stat-granary" class="tag-val" style="color: #facc15;">🍏 0 | 🪵 0</span>
       </div>
       <div class="tag">
-        <span class="tag-label">Avg Food:</span>
-        <span id="stat-avg-food" class="tag-val">0.0</span>
-      </div>
-      <div class="tag">
-        <span class="tag-label">🧬 Dominant Lineage:</span>
-        <span id="stat-lineage" class="tag-val" style="color: #c084fc;">None</span>
+        <span class="tag-label">Inspecting:</span>
+        <span id="stat-inspecting" class="tag-val" style="color: var(--accent-cyan);">Hero #1</span>
       </div>
     </div>
-
-    <!-- Quick Direct Links -->
-    <div class="status-tags">
-      <span class="tag-label">Direct Views:</span>
-      <a href="/" style="color: var(--accent-cyan); text-decoration: none; font-size: 0.8rem; margin-right: 8px;">🌍 / (World)</a>
-      <a href="/neural" style="color: var(--accent-purple); text-decoration: none; font-size: 0.8rem; margin-right: 8px;">🧠 /neural (Brain)</a>
-      <a href="/phase2" style="color: var(--accent-green); text-decoration: none; font-size: 0.8rem;">🏕️ /phase2 (Living Hero)</a>
+    <div id="evolution-indicator" class="evolution-badge" style="display: none;">
+      🧬 Evolving Population...
     </div>
   </div>
 
-  <!-- Main Viewports -->
-  <main id="main-content">
-
-    <!-- View 1: Population Grid -->
-    <section id="sec-world" class="view-section">
-      <div class="section-header">
-        <h2>🌍 Population Grid (8 Learning Agents)</h2>
-        <span style="font-size: 0.8rem; color: var(--text-muted);">🟢 Food | 🔴 Hazard | 👑 Champion</span>
+  <!-- Master Split Layout -->
+  <main class="master-layout">
+    
+    <!-- Left: Civilization World Canvas -->
+    <div class="panel canvas-panel">
+      <div class="panel-header">
+        <span>The Living World (14x14 Grid)</span>
+        <span style="font-size: 0.72rem; color: var(--text-muted);">Moving Hazards Active ⚠️</span>
       </div>
 
-      <div id="world-container" class="view-content">
-        <!-- Population Leaderboard Card -->
-        <div class="creature-card" style="min-width: 200px; max-height: 220px; overflow-y: auto;">
-          <div style="font-weight: 600; color: #fff; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 4px; display: flex; justify-content: space-between;">
-            <span>Lineages (Population)</span>
-            <span style="color: #facc15;">Food</span>
+      <div class="canvas-wrapper">
+        <canvas id="world-canvas" width="600" height="600"></canvas>
+      </div>
+
+      <!-- Legend -->
+      <div class="legend-bar">
+        <div class="legend-item"><span>⛺</span> <span>Home Base</span></div>
+        <div class="legend-item"><span>💧</span> <span>Water Lake</span></div>
+        <div class="legend-item"><span>🍏</span> <span>Ripe Bush</span></div>
+        <div class="legend-item"><span>🌱</span> <span>Barren Bush</span></div>
+        <div class="legend-item"><span>🌲</span> <span>Timber Tree</span></div>
+        <div class="legend-item"><span>🪵</span> <span>Tree Stump</span></div>
+        <div class="legend-item"><span>⚠️</span> <span>Moving Hazard</span></div>
+        <div class="legend-item"><span>🧙</span> <span>Villager</span></div>
+      </div>
+    </div>
+
+    <!-- Right: Real-time Neural Brain & Colony Dashboard -->
+    <div class="panel sidebar-panel">
+      
+      <!-- Tab Navigation -->
+      <div class="sidebar-tabs">
+        <button class="sidebar-tab active" data-tab="brain">🧠 Neural Brain</button>
+        <button class="sidebar-tab" data-tab="colony">🏕️ Colony & Roster</button>
+      </div>
+
+      <!-- TAB 1: Neural Brain Viewer -->
+      <div id="tab-brain-content" class="tab-content active">
+        
+        <!-- Active Hero Vitals -->
+        <div class="card">
+          <div class="card-header">
+            <span id="hero-name-label">Hero #01 Vitals</span>
+            <span id="hero-goal-badge" class="goal-badge">FORAGING</span>
           </div>
-          <div id="leaderboard-list" style="display: flex; flex-direction: column; gap: 4px; margin-top: 4px;">
-            <!-- Rendered by JS -->
+
+          <div class="vitals-grid">
+            <div class="vital-item">
+              <div class="vital-header"><span>Health</span><span id="val-health">100%</span></div>
+              <div class="bar-bg"><div id="bar-health" class="bar-fill" style="width: 100%; background: var(--accent-emerald);"></div></div>
+            </div>
+            <div class="vital-item">
+              <div class="vital-header"><span>Energy</span><span id="val-energy">100%</span></div>
+              <div class="bar-bg"><div id="bar-energy" class="bar-fill" style="width: 100%; background: var(--accent-cyan);"></div></div>
+            </div>
+            <div class="vital-item">
+              <div class="vital-header"><span>Hunger</span><span id="val-hunger">0%</span></div>
+              <div class="bar-bg"><div id="bar-hunger" class="bar-fill" style="width: 0%; background: var(--accent-amber);"></div></div>
+            </div>
+            <div class="vital-item">
+              <div class="vital-header"><span>Thirst</span><span id="val-thirst">0%</span></div>
+              <div class="bar-bg"><div id="bar-thirst" class="bar-fill" style="width: 0%; background: var(--accent-cyan);"></div></div>
+            </div>
+          </div>
+
+          <!-- Backpack -->
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px; font-size: 0.78rem;">
+            <span style="color: var(--text-secondary);">Backpack Inventory:</span>
+            <div id="backpack-slots-container" class="backpack-slots"></div>
           </div>
         </div>
 
-        <!-- Canvas -->
-        <canvas id="world-canvas"></canvas>
-      </div>
-    </section>
+        <!-- Real-Time Neural Architecture Visualizer -->
+        <div class="card" style="flex: 1; display: flex; flex-direction: column;">
+          <div class="card-header">
+            <span>Neural Core (GRU Recurrent Network)</span>
+            <span style="font-size: 0.7rem; color: var(--accent-cyan);" id="lineage-tag">Lineage: Hero_01</span>
+          </div>
 
-    <!-- View 2: Champion Neural Network -->
-    <section id="sec-brain" class="view-section">
-      <div class="section-header">
-        <h2>🧠 Neural Network of the Current Champion</h2>
-        <span id="champ-header-lineage" style="font-size: 0.8rem; color: #facc15;">Lineage: A0</span>
+          <div class="network-container">
+            <!-- SENSORY LAYER (6 Nodes) -->
+            <div class="network-col">
+              <div class="col-title">Sensory Inputs (6D)</div>
+              <div class="node-list" id="nodes-sensor"></div>
+            </div>
+
+            <!-- HIDDEN LAYER (16 Nodes) -->
+            <div class="network-col">
+              <div class="col-title">GRU Hidden State (16D)</div>
+              <div class="node-list node-grid-2col" id="nodes-hidden"></div>
+            </div>
+
+            <!-- MOTOR ACTIONS (4 Nodes) -->
+            <div class="network-col">
+              <div class="col-title">Motor Actions (4D)</div>
+              <div class="node-list" id="nodes-action"></div>
+            </div>
+          </div>
+        </div>
+
       </div>
 
-      <div id="brain-container" class="view-content">
-        <canvas id="brain-canvas"></canvas>
+      <!-- TAB 2: Colony & Roster -->
+      <div id="tab-colony-content" class="tab-content">
+        
+        <!-- Granary & Colony Stats -->
+        <div class="card">
+          <div class="card-header">
+            <span>Central Granary & Reserves</span>
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; text-align: center;">
+            <div class="stat-box">
+              <div class="stat-box-val" id="colony-food" style="color: #4ade80;">0</div>
+              <div class="stat-box-lbl">Food Stockpile 🍏</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-box-val" id="colony-wood" style="color: #fbbf24;">0</div>
+              <div class="stat-box-lbl">Lumber Depot 🪵</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-box-val" id="colony-rations" style="color: #38bdf8;">0</div>
+              <div class="stat-box-lbl">Emergency Meals 🍲</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Villager Roster -->
+        <div class="card" style="flex: 1; display: flex; flex-direction: column;">
+          <div class="card-header">
+            <span>Population Roster (Click to Inspect Brain)</span>
+          </div>
+          <div class="roster-list" id="roster-container"></div>
+        </div>
+
+        <!-- Village Event Feed -->
+        <div class="card">
+          <div class="card-header">
+            <span>Village Chronology</span>
+          </div>
+          <div class="event-feed" id="event-feed"></div>
+        </div>
+
       </div>
-    </section>
+
+    </div>
 
   </main>
 
