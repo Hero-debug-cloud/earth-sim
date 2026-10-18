@@ -1,13 +1,15 @@
 {
-  "generations_trained": 2,
+  "generations_trained": 3,
   "best_fitness": 135.0,
   "history_best": [
+    135.0,
     210.0,
     135.0
   ],
   "history_avg": [
-    95.94,
-    39.69
+    28.75,
+    61.56,
+    25.62
   ],
-  "updated_at": 1792337458.8242528
+  "updated_at": 1792338151.384369
 }

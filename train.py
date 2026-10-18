@@ -5,7 +5,7 @@ import json
 import argparse
 import random
 from pathlib import Path
-from typing import List, Dict, Any, Tuple
+from typing import List, Dict, Any, Tuple, Optional, Callable
 import numpy as np
 import torch
 
@@ -115,7 +115,8 @@ def train_civilization(
     population_size: int = 16,
     ticks_per_gen: int = 150,
     num_hazards: int = 3,
-    verbose: bool = True
+    verbose: bool = True,
+    callback: Optional[Callable[[Dict[str, Any]], None]] = None
 ) -> Dict[str, Any]:
     """Runs evolutionary training loop and hot-updates the champion checkpoint."""
     world = CivilizationWorld(size=14, num_bushes=5, num_trees=5, num_hazards=num_hazards)
@@ -135,9 +136,21 @@ def train_civilization(
         )
         population.append(agent)
 
+    init_msg = f"🌱 Initiating Evolutionary Training: {generations} Generations | Population: {population_size} | World: 14x14 | Hazards: {num_hazards}"
     if verbose:
-        print(f"\n🌱 Initiating Evolutionary Training: {generations} Generations | Population: {population_size} | World Size: 14x14")
-        print(f"   Moving Hazards: {num_hazards} | Base Checkpoint: {base_ckpt or 'Random Initialization'}\n")
+        print(f"\n{init_msg}")
+        print(f"   Base Checkpoint: {base_ckpt or 'Random Initialization'}\n")
+
+    if callback:
+        callback({
+            "status": "init",
+            "gen": 0,
+            "total_gens": generations,
+            "best_fitness": 0.0,
+            "avg_fitness": 0.0,
+            "best_deposits": 0,
+            "log": init_msg
+        })
 
     history_best: List[float] = []
     history_avg: List[float] = []
@@ -155,12 +168,25 @@ def train_civilization(
         population.sort(key=lambda a: a.fitness, reverse=True)
         best_agent = population[0]
         avg_score = float(np.mean(scores))
+        top_deposits = best_agent.food_deposited + best_agent.wood_deposited
 
         history_best.append(round(best_agent.fitness, 2))
         history_avg.append(round(avg_score, 2))
 
+        log_line = f"Gen {gen:3d}/{generations} | Best Fitness: {best_agent.fitness:6.1f} | Avg: {avg_score:6.1f} | Top Deposits: {top_deposits:2d} | Lineage: {best_agent.lineage[:24]}"
         if verbose and (gen % 5 == 0 or gen == 1 or gen == generations):
-            print(f"Gen {gen:3d}/{generations} | Best Fitness: {best_agent.fitness:6.1f} | Avg: {avg_score:6.1f} | Top Deposits: {best_agent.food_deposited + best_agent.wood_deposited:2d} | Lineage: {best_agent.lineage[:30]}")
+            print(log_line)
+
+        if callback:
+            callback({
+                "status": "step",
+                "gen": gen,
+                "total_gens": generations,
+                "best_fitness": round(best_agent.fitness, 1),
+                "avg_fitness": round(avg_score, 1),
+                "best_deposits": top_deposits,
+                "log": log_line
+            })
 
         # Elite Selection & Mutation
         elites = population[:4]
@@ -199,8 +225,20 @@ def train_civilization(
     with open(HISTORY_PATH, "w") as f:
         json.dump(hist_data, f, indent=2)
 
+    comp_msg = f"🏆 Training Complete! Checkpoint saved to: {CHAMPION_PATH}"
     if verbose:
-        print(f"\n🏆 Training Complete! Checkpoint saved to: {CHAMPION_PATH}\n")
+        print(f"\n{comp_msg}\n")
+
+    if callback:
+        callback({
+            "status": "complete",
+            "gen": generations,
+            "total_gens": generations,
+            "best_fitness": history_best[-1] if history_best else 0.0,
+            "avg_fitness": history_avg[-1] if history_avg else 0.0,
+            "best_deposits": population[0].food_deposited + population[0].wood_deposited,
+            "log": comp_msg
+        })
 
     return hist_data
 

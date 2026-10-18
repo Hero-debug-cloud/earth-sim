@@ -329,7 +329,25 @@ async def websocket_endpoint(websocket: WebSocket):
                 await manager.broadcast(json.dumps(get_world_state()))
 
                 loop = asyncio.get_running_loop()
-                await loop.run_in_executor(None, train_civilization, num_gens, 16, 150, 3, False)
+
+                def on_evolution_progress(info: Dict[str, Any]):
+                    msg = json.dumps({
+                        "type": "evolution_stream",
+                        **info
+                    })
+                    asyncio.run_coroutine_threadsafe(manager.broadcast(msg), loop)
+
+                await loop.run_in_executor(
+                    None,
+                    lambda: train_civilization(
+                        generations=num_gens,
+                        population_size=16,
+                        ticks_per_gen=150,
+                        num_hazards=3,
+                        verbose=True,
+                        callback=on_evolution_progress
+                    )
+                )
 
                 current_generation += num_gens
                 is_evolving = False

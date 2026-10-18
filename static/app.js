@@ -25,6 +25,8 @@ function connectWS() {
       if (data.type === "world_update") {
         currentState = data;
         updateUI(data);
+      } else if (data.type === "evolution_stream") {
+        handleEvolutionStream(data);
       }
     } catch (e) {
       console.error("Frame parse error:", e);
@@ -47,10 +49,90 @@ if (btnEvolve) {
   btnEvolve.addEventListener("click", () => {
     const inputEl = document.getElementById("evolve-gens-input");
     const gens = parseInt(inputEl.value) || 10;
+
+    // Open Terminal Modal Popup
+    const modal = document.getElementById("evolution-modal");
+    if (modal) {
+      modal.style.display = "flex";
+      document.getElementById("evo-metric-gen").textContent = `0 / ${gens}`;
+      document.getElementById("evo-metric-best").textContent = "0.0";
+      document.getElementById("evo-metric-avg").textContent = "0.0";
+      document.getElementById("evo-metric-deposits").textContent = "0";
+      document.getElementById("evo-modal-progress").style.width = "0%";
+      
+      const term = document.getElementById("evo-modal-terminal");
+      term.innerHTML = `<div class="term-init">🚀 Initializing Evolutionary Adaptation Pipeline (${gens} Generations)...</div>`;
+      
+      const badge = document.getElementById("evo-modal-badge");
+      badge.className = "modal-badge-running";
+      badge.textContent = "ADAPTING...";
+      
+      const closeBtn = document.getElementById("btn-evo-modal-close");
+      closeBtn.style.display = "none";
+      document.getElementById("evo-modal-footer-msg").textContent = "Simulating parallel generations... Please do not close.";
+    }
+
     if (ws && ws.readyState === WebSocket.OPEN) {
       ws.send(JSON.stringify({ action: "evolve_generations", generations: gens }));
     }
   });
+}
+
+// Close button on Evolution Modal (User closes when they are ready)
+const btnEvoModalClose = document.getElementById("btn-evo-modal-close");
+if (btnEvoModalClose) {
+  btnEvoModalClose.addEventListener("click", () => {
+    const modal = document.getElementById("evolution-modal");
+    if (modal) modal.style.display = "none";
+  });
+}
+
+function handleEvolutionStream(data) {
+  const modal = document.getElementById("evolution-modal");
+  if (modal && modal.style.display === "none") {
+    modal.style.display = "flex";
+  }
+
+  const term = document.getElementById("evo-modal-terminal");
+  if (!term) return;
+
+  if (data.status === "init") {
+    const line = document.createElement("div");
+    line.className = "term-init";
+    line.textContent = `[INIT] ${data.log}`;
+    term.appendChild(line);
+  } else if (data.status === "step") {
+    const line = document.createElement("div");
+    line.className = "term-step";
+    line.innerHTML = `<span>[GEN ${String(data.gen).padStart(2, '0')}/${data.total_gens}]</span> Best Fit: <b>${data.best_fitness}</b> | Avg: ${data.avg_fitness} | Harvest: ${data.best_deposits}`;
+    term.appendChild(line);
+
+    // Update Live Metrics
+    document.getElementById("evo-metric-gen").textContent = `${data.gen} / ${data.total_gens}`;
+    document.getElementById("evo-metric-best").textContent = data.best_fitness.toFixed(1);
+    document.getElementById("evo-metric-avg").textContent = data.avg_fitness.toFixed(1);
+    document.getElementById("evo-metric-deposits").textContent = data.best_deposits;
+
+    const pct = Math.round((data.gen / data.total_gens) * 100);
+    document.getElementById("evo-modal-progress").style.width = `${pct}%`;
+  } else if (data.status === "complete") {
+    const line = document.createElement("div");
+    line.className = "term-complete";
+    line.textContent = `✓ ${data.log}`;
+    term.appendChild(line);
+
+    document.getElementById("evo-modal-progress").style.width = "100%";
+    const badge = document.getElementById("evo-modal-badge");
+    badge.className = "modal-badge-complete";
+    badge.textContent = "✓ COMPLETE";
+
+    document.getElementById("evo-modal-footer-msg").textContent = "Evolution finished! New Champion brain saved and deployed.";
+    const closeBtn = document.getElementById("btn-evo-modal-close");
+    closeBtn.style.display = "inline-flex";
+  }
+
+  // Auto-scroll terminal output
+  term.scrollTop = term.scrollHeight;
 }
 
 const btnPlayPause = document.getElementById("btn-play-pause");
@@ -105,7 +187,7 @@ function updateUI(data) {
   const statGranary = document.getElementById("stat-granary");
   if (statGranary) statGranary.textContent = `🍏 ${data.stockpile.food} | 🪵 ${data.stockpile.wood}`;
 
-  // Evolution Indicator
+  // Evolution Indicator in Top Bar
   const evoBadge = document.getElementById("evolution-indicator");
   const evolveBtn = document.getElementById("btn-evolve");
   if (evoBadge && evolveBtn) {

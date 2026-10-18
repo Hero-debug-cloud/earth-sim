@@ -608,7 +608,179 @@
       line-height: 1;
     }
 
-    .action-row.chosen .action-header {
-      color: var(--accent-emerald);
+    /* Evolution Terminal Modal Popup */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(8px);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-window {
+      width: 720px;
+      max-width: 92vw;
+      height: 520px;
+      max-height: 88vh;
+      background: #090e1a;
+      border: 1px solid var(--border-strong);
+      border-radius: 10px;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.85), 0 0 40px rgba(6, 182, 212, 0.18);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      animation: modal-pop 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes modal-pop {
+      from { transform: scale(0.96); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    .modal-header {
+      background: var(--surface-1);
+      border-bottom: 1px solid var(--border-subtle);
+      padding: 10px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-shrink: 0;
+    }
+
+    .modal-title-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .modal-dots {
+      display: flex;
+      gap: 6px;
+    }
+
+    .modal-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+    .dot-red { background: #ef4444; }
+    .dot-yellow { background: #f59e0b; }
+    .dot-green { background: #10b981; }
+
+    .modal-badge-running {
+      background: rgba(245, 158, 11, 0.15);
+      border: 1px solid var(--accent-amber);
+      color: var(--accent-amber);
+      font-size: 0.68rem;
       font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      animation: pulse-badge 1s infinite alternate;
+    }
+
+    .modal-badge-complete {
+      background: rgba(16, 185, 129, 0.18);
+      border: 1px solid var(--accent-emerald);
+      color: var(--accent-emerald);
+      font-size: 0.68rem;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+    }
+
+    .modal-metrics {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      padding: 10px 16px;
+      background: #0d1424;
+      border-bottom: 1px solid var(--border-subtle);
+      flex-shrink: 0;
+    }
+
+    .modal-metric-box {
+      background: var(--surface-2);
+      border: 1px solid var(--border-subtle);
+      border-radius: 6px;
+      padding: 6px 10px;
+      text-align: center;
+    }
+
+    .modal-metric-val {
+      font-family: ui-monospace, monospace;
+      font-size: 1.05rem;
+      font-weight: 700;
+    }
+
+    .modal-metric-lbl {
+      font-size: 0.64rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .modal-progress-bar-bg {
+      height: 5px;
+      background: rgba(255, 255, 255, 0.08);
+      overflow: hidden;
+      position: relative;
+      flex-shrink: 0;
+    }
+
+    .modal-progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #f59e0b, #10b981, #06b6d4);
+      width: 0%;
+      transition: width 0.2s ease-out;
+    }
+
+    .modal-terminal {
+      flex: 1;
+      min-height: 0;
+      background: #050811;
+      padding: 12px 16px;
+      overflow-y: auto;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.72rem;
+      line-height: 1.6;
+      color: #38bdf8;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .modal-terminal .term-init {
+      color: #a78bfa;
+      font-weight: 600;
+    }
+
+    .modal-terminal .term-step {
+      color: #94a3b8;
+    }
+
+    .modal-terminal .term-step b {
+      color: #4ade80;
+    }
+
+    .modal-terminal .term-complete {
+      color: #facc15;
+      font-weight: 700;
+      margin-top: 6px;
+      padding-top: 6px;
+      border-top: 1px dashed var(--border-subtle);
+    }
+
+    .modal-footer {
+      padding: 10px 16px;
+      background: var(--surface-1);
+      border-top: 1px solid var(--border-subtle);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-shrink: 0;
     }
