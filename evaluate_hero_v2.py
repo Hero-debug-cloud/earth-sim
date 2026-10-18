@@ -1,13 +1,103 @@
-#!/usr/bin/env python3
 import time
 import argparse
 import random
+import sys
+import json
+import queue
+import threading
+import subprocess
+import urllib.request
 from pathlib import Path
 from typing import List, Dict, Any, Tuple, Optional
 import numpy as np
 import torch
 
 from agent_phase2 import Phase2Agent, Phase2VillageMemory
+
+# Web Streaming Queue & Worker
+frame_queue: queue.Queue = queue.Queue(maxsize=3)
+_sender_thread: Optional[threading.Thread] = None
+_sender_running: bool = False
+
+def _frame_sender_loop():
+    while _sender_running:
+        try:
+            frame = frame_queue.get(timeout=0.1)
+        except queue.Empty:
+            continue
+        if frame is None:
+            break
+        try:
+            payload = json.dumps(frame).encode("utf-8")
+            req = urllib.request.Request(
+                "http://127.0.0.1:8000/api/scarcity/frame",
+                data=payload,
+                headers={"Content-Type": "application/json"}
+            )
+            with urllib.request.urlopen(req, timeout=0.15) as resp:
+                pass
+        except Exception:
+            pass
+        finally:
+            frame_queue.task_done()
+
+def start_web_streamer():
+    global _sender_thread, _sender_running
+    if _sender_thread is not None and _sender_thread.is_alive():
+        return
+    _sender_running = True
+    _sender_thread = threading.Thread(target=_frame_sender_loop, daemon=True)
+    _sender_thread.start()
+
+def stop_web_streamer():
+    global _sender_running
+    _sender_running = False
+    try:
+        frame_queue.put_nowait(None)
+    except Exception:
+        pass
+
+def queue_web_frame(frame: dict):
+    if not _sender_running:
+        return
+    try:
+        frame_queue.put_nowait(frame)
+    except queue.Full:
+        try:
+            _ = frame_queue.get_nowait()
+            frame_queue.task_done()
+            frame_queue.put_nowait(frame)
+        except Exception:
+            pass
+
+def ensure_web_server_active(port: int = 8000) -> Optional[subprocess.Popen]:
+    try:
+        req = urllib.request.Request(f"http://127.0.0.1:{port}/api/scarcity/health")
+        with urllib.request.urlopen(req, timeout=0.3) as resp:
+            if resp.status == 200:
+                return None
+    except Exception:
+        pass
+
+    cmd = [
+        sys.executable, "-m", "uvicorn", "server:app",
+        "--host", "0.0.0.0", "--port", str(port),
+        "--log-level", "warning"
+    ]
+    try:
+        proc = subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        for _ in range(25):
+            time.sleep(0.1)
+            try:
+                req = urllib.request.Request(f"http://127.0.0.1:{port}/api/scarcity/health")
+                with urllib.request.urlopen(req, timeout=0.2) as resp:
+                    if resp.status == 200:
+                        return proc
+            except Exception:
+                pass
+        return proc
+    except Exception:
+        return None
 
 # ANSI Colors
 CYAN = "\033[96m"
@@ -252,6 +342,12 @@ def run_scarcity_simulation(
     np.random.seed(seed)
     torch.manual_seed(seed)
 
+    server_proc = None
+    if visual:
+        server_proc = ensure_web_server_active(8000)
+        start_web_streamer()
+        print(f"\n{CYAN}{BOLD}🌐 Live Web Dashboard running at: http://localhost:8000/scarcity{RESET}\n")
+
     env = ScarcityPhase2Environment(
         size=grid_size,
         num_bushes=num_bushes,
@@ -427,7 +523,67 @@ def run_scarcity_simulation(
             print(f"{BOLD}╔══════════════════════════════════════════════════════════════════════════════════════════════════════════╗{RESET}")
             print(f"{BOLD}║  🏕️  SCARCITY SIMULATOR V2: {num_heroes} HEROES • HIGH FAMINE PRESSURE (COOLDOWN RESPONSES)                   ║{RESET}")
             print(f"{BOLD}║  Day {day_num:3d}/{max_days} • {tod_name:<14} • Active: {alive_count:2d}/{num_heroes} 🛡️ • Granary: 🍏 {env.stockpile['food']:3d} | 🪵 {env.stockpile['wood']:3d} • {famine_banner:<10}  ║{RESET}")
+            print(f"{BOLD}║  🌐 Web Dashboard: {CYAN}http://localhost:8000/scarcity{RESET}{BOLD}                                                         ║{RESET}")
             print(f"{BOLD}╚══════════════════════════════════════════════════════════════════════════════════════════════════════════╝{RESET}")
+
+            # Emit frame to Web Dashboard
+            alive_heroes_list = [heroes[hid - 1] for hid in range(1, num_heroes + 1) if hero_alive[hid]]
+            frame_payload = {
+                "type": "scarcity_update",
+                "tick": tick,
+                "day_num": day_num,
+                "max_days": max_days,
+                "tod_name": tod_name,
+                "grid_size": grid_size,
+                "home_pos": list(env.home_pos),
+                "water_tiles": [list(pt) for pt in env.water_tiles],
+                "hazards": [list(pt) for pt in env.hazards],
+                "bushes": [{"pos": list(b["pos"]), "is_ripe": b["is_ripe"], "timer": b["timer"], "max_timer": env.food_cooldown} for b in env.bushes],
+                "trees": [{"pos": list(t["pos"]), "is_mature": t["is_mature"], "timer": t["timer"], "max_timer": env.tree_cooldown} for t in env.tree_entries],
+                "stockpile": {"food": env.stockpile["food"], "wood": env.stockpile["wood"]},
+                "emergency_rations": env.emergency_rations_eaten,
+                "total_heroes": num_heroes,
+                "alive_count": alive_count,
+                "heroes": [
+                    {
+                        "id": hid,
+                        "r": hero_positions[hid][0],
+                        "c": hero_positions[hid][1],
+                        "alive": hero_alive[hid],
+                        "vitals": {
+                            "health": round(heroes[hid - 1].memory.vitals["health"], 1),
+                            "hunger": round(heroes[hid - 1].memory.vitals["hunger"], 1),
+                            "thirst": round(heroes[hid - 1].memory.vitals["thirst"], 1),
+                            "energy": round(heroes[hid - 1].memory.vitals["energy"], 1),
+                        },
+                        "backpack": {
+                            "food": heroes[hid - 1].memory.backpack["food"],
+                            "wood": heroes[hid - 1].memory.backpack["wood"]
+                        },
+                        "goal": heroes[hid - 1].memory.current_goal,
+                        "days_survived": hero_stats[hid]["days_survived"],
+                        "cause_of_death": hero_stats[hid]["cause_of_death"] if not hero_alive[hid] else None,
+                        "food_dep": hero_stats[hid]["food_deposited"],
+                        "wood_dep": hero_stats[hid]["wood_deposited"],
+                        "rations": hero_stats[hid]["rations_eaten"]
+                    }
+                    for hid in range(1, num_heroes + 1)
+                ],
+                "stats": {
+                    "survival_rate": round((alive_count / max(1, num_heroes)) * 100, 1),
+                    "avg_health": round(float(np.mean([h.memory.vitals["health"] for h in alive_heroes_list])), 1) if alive_heroes_list else 0.0,
+                    "avg_hunger": round(float(np.mean([h.memory.vitals["hunger"] for h in alive_heroes_list])), 1) if alive_heroes_list else 0.0,
+                    "avg_thirst": round(float(np.mean([h.memory.vitals["thirst"] for h in alive_heroes_list])), 1) if alive_heroes_list else 0.0,
+                    "avg_energy": round(float(np.mean([h.memory.vitals["energy"] for h in alive_heroes_list])), 1) if alive_heroes_list else 0.0,
+                    "starvation_deaths": sum(1 for s in hero_stats.values() if "Starvation" in s.get("cause_of_death", "")),
+                    "dehydration_deaths": sum(1 for s in hero_stats.values() if "Dehydration" in s.get("cause_of_death", "")),
+                    "hazard_deaths": sum(1 for s in hero_stats.values() if "Hazard" in s.get("cause_of_death", ""))
+                },
+                "recent_events": recent_events_feed[-6:],
+                "is_paused": False,
+                "tick_speed": round(1.0 / max(0.001, delay), 1)
+            }
+            queue_web_frame(frame_payload)
 
             # Map rendering
             occupied_map: Dict[Tuple[int, int], List[int]] = {}
@@ -541,6 +697,9 @@ def run_scarcity_simulation(
         print(f"#{rank:<4} | Hero {hid:02d}  | {s['days_survived']:5.1f} / {max_days} d  | {s['food_deposited']:6d} 🍏   | {s['wood_deposited']:6d} 🪵   | {color}{s['cause_of_death']}{RESET}")
 
     print(f"{BOLD}══════════════════════════════════════════════════════════════════════════════════════════════════════════{RESET}\n")
+
+    if visual:
+        stop_web_streamer()
 
     return {
         "survived_full": survived_full,
