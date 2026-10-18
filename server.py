@@ -25,22 +25,22 @@ app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 # ==============================================================================
 
 GRID_SIZE = 14
-NUM_HEROES = 8
+NUM_HEROES = 1
 world = CivilizationWorld(size=GRID_SIZE, num_bushes=5, num_trees=5, num_hazards=3)
 
 heroes: List[CivilizationAgent] = []
 hero_positions: Dict[int, Tuple[int, int]] = {}
-for i in range(1, NUM_HEROES + 1):
-    agent = CivilizationAgent(
-        agent_id=i,
-        in_features=6,
-        hidden_size=16,
-        home_pos=world.home_pos,
-        backpack_capacity=5,
-        ckpt_path=str(CHAMPION_PATH) if CHAMPION_PATH.exists() else None
-    )
-    heroes.append(agent)
-    hero_positions[i] = world.home_pos
+agent = CivilizationAgent(
+    agent_id=1,
+    in_features=6,
+    hidden_size=16,
+    home_pos=world.home_pos,
+    backpack_capacity=5,
+    ckpt_path=str(CHAMPION_PATH) if CHAMPION_PATH.exists() else None
+)
+agent.lineage = "Gen 1 Champion"
+heroes.append(agent)
+hero_positions[1] = world.home_pos
 
 current_tick: int = 0
 current_generation: int = 1
@@ -49,7 +49,7 @@ tick_speed: float = 6.0  # ticks/sec
 selected_hero_id: int = 1
 last_ckpt_mtime: float = CHAMPION_PATH.stat().st_mtime if CHAMPION_PATH.exists() else 0.0
 is_evolving: bool = False
-recent_events: List[str] = ["Civilization founded at Home Base ⛺"]
+recent_events: List[str] = ["World founded at Home Base ⛺", "Champion Hero deployed 🧙"]
 
 
 class ConnectionManager:
@@ -151,8 +151,11 @@ def get_world_state() -> Dict[str, Any]:
     selected_pos = hero_positions.get(selected_hero.id, world.home_pos)
 
     heroes_payload = []
+    all_brains = {}
     for h in heroes:
         pos = hero_positions.get(h.id, world.home_pos)
+        b_telemetry = get_hero_brain_telemetry(h, pos)
+        all_brains[h.id] = b_telemetry
         heroes_payload.append({
             "id": h.id,
             "r": pos[0],
@@ -169,6 +172,8 @@ def get_world_state() -> Dict[str, Any]:
             },
             "goal": h.memory.current_goal,
             "lineage": h.lineage,
+            "action_name": b_telemetry["chosen_name"],
+            "action_idx": b_telemetry["chosen_action"],
             "is_selected": (h.id == selected_hero.id)
         })
 
@@ -199,7 +204,8 @@ def get_world_state() -> Dict[str, Any]:
         },
         "emergency_rations": world.emergency_rations_eaten,
         "heroes": heroes_payload,
-        "brain": get_hero_brain_telemetry(selected_hero, selected_pos),
+        "brain": all_brains.get(selected_hero.id, get_hero_brain_telemetry(selected_hero, selected_pos)),
+        "all_brains": all_brains,
         "events": recent_events[-6:],
         "is_paused": is_paused,
         "tick_speed": tick_speed,
@@ -261,11 +267,11 @@ def step_civilization():
         hero_positions[hid] = new_pos
 
         if events:
-            recent_events.extend([f"[Hero {hid}] {ev}" for ev in events])
+            recent_events.extend(events)
 
         # Respawn hero if perished
         if agent.memory.vitals["health"] <= 0.0:
-            recent_events.append(f"💀 Hero {hid} perished! Reborn at Home Base ⛺")
+            recent_events.append("💀 Hero perished! Reborn at Home Base ⛺")
             agent.reset_state()
             hero_positions[hid] = world.home_pos
 
@@ -328,11 +334,14 @@ async def websocket_endpoint(websocket: WebSocket):
                 current_generation += num_gens
                 is_evolving = False
                 check_and_reload_checkpoint()
-                recent_events.append(f"🧬 Evolutionary adaptation complete! Advanced {num_gens} generations.")
+                heroes[0].lineage = f"Gen {current_generation} Champion"
+                recent_events.append(f"🧬 Evolved {num_gens} generations! New Gen {current_generation} Champion deployed.")
             elif action == "reset":
                 world.reset_world()
+                current_generation = 1
                 for h in heroes:
                     h.reset_state()
+                    h.lineage = "Gen 1 Champion"
                     hero_positions[h.id] = world.home_pos
                 recent_events.append("🔄 World reset by user command.")
 

@@ -35,7 +35,7 @@
       height: 100vh;
       max-width: 100vw;
       max-height: 100vh;
-      overflow: hidden; /* Strict Zero-Scroll: fits in one view */
+      overflow: hidden; /* Strict Zero-Scroll: 100% single view */
       background-color: var(--bg-dark);
       color: var(--text-primary);
       display: flex;
@@ -342,7 +342,7 @@
       overflow: hidden;
     }
 
-    /* Top Row of Sidebar: Vitals (Left) + Colony Depot & Live Events (Right) */
+    /* Top Row of Sidebar: Champion Vitals (Left) + Colony Depot & Adventure Log (Right) */
     .sidebar-top-grid {
       display: grid;
       grid-template-columns: 1.15fr 1fr;
@@ -376,42 +376,10 @@
       flex-shrink: 0;
     }
 
-    /* Hero Quick Chips Bar */
-    .hero-selector-bar {
-      display: flex;
-      gap: 3px;
-      overflow-x: auto;
-      flex-shrink: 0;
-    }
-
-    .hero-chip {
-      background: var(--surface-3);
-      border: 1px solid var(--border-subtle);
+    .goal-badge {
       padding: 1px 6px;
       border-radius: 3px;
-      font-size: 0.66rem;
-      font-weight: 700;
-      color: var(--text-secondary);
-      cursor: pointer;
-      white-space: nowrap;
-      transition: all 0.1s;
-    }
-
-    .hero-chip:hover {
-      background: var(--surface-hover);
-      color: #fff;
-    }
-
-    .hero-chip.active {
-      border-color: var(--accent-cyan);
-      background: rgba(6, 182, 212, 0.18);
-      color: var(--accent-cyan);
-    }
-
-    .goal-badge {
-      padding: 1px 5px;
-      border-radius: 3px;
-      font-size: 0.62rem;
+      font-size: 0.64rem;
       font-weight: 700;
       background: rgba(16, 185, 129, 0.15);
       color: var(--accent-emerald);
@@ -458,14 +426,14 @@
     }
 
     .backpack-slot {
-      width: 18px;
-      height: 18px;
+      width: 20px;
+      height: 20px;
       border: 1px dashed var(--border-strong);
       border-radius: 3px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 0.72rem;
+      font-size: 0.75rem;
       background: rgba(0, 0, 0, 0.25);
     }
 
@@ -484,12 +452,12 @@
 
     .stat-box-val {
       font-family: ui-monospace, monospace;
-      font-size: 0.9rem;
+      font-size: 0.95rem;
       font-weight: 700;
     }
 
     .stat-box-lbl {
-      font-size: 0.58rem;
+      font-size: 0.6rem;
       color: var(--text-muted);
       margin-top: 1px;
     }
@@ -526,7 +494,7 @@
       flex: 1;
       min-height: 0;
       display: grid;
-      grid-template-columns: 1.05fr 1fr 1.05fr;
+      grid-template-columns: 1fr 1.35fr 1fr;
       gap: 6px;
       background: #090e1a;
       border: 1px solid var(--border-subtle);
@@ -595,28 +563,32 @@
       border-radius: 2px;
     }
 
-    /* 4x4 Heatmap Matrix for 16 GRU Hidden Nodes */
+    /* 4x4 Heatmap Matrix for 16 GRU Hidden Nodes (Zero Cutoff, strictly 4x4) */
     .hidden-matrix {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
+      grid-template-rows: repeat(4, 1fr);
       gap: 3px;
       flex: 1;
       min-height: 0;
+      overflow: hidden;
     }
 
     .matrix-cell {
-      aspect-ratio: 1 / 1;
+      min-width: 0;
+      min-height: 0;
       border-radius: 3px;
       border: 1px solid var(--border-subtle);
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      font-size: 0.58rem;
+      font-size: 0.55rem;
       font-family: ui-monospace, monospace;
       color: #fff;
       transition: background 0.15s;
-      line-height: 1;
+      line-height: 1.1;
+      padding: 1px;
     }
 
     /* Action Output Cards */
@@ -700,8 +672,8 @@
         <span id="stat-granary" class="tag-val" style="color: #facc15;">🍏 0 | 🪵 0</span>
       </div>
       <div class="tag">
-        <span class="tag-label">Inspecting:</span>
-        <span id="stat-inspecting" class="tag-val" style="color: var(--accent-cyan);">Hero #1</span>
+        <span class="tag-label">Active:</span>
+        <span id="stat-inspecting" class="tag-val" style="color: var(--accent-cyan);">Champion Hero 🧙</span>
       </div>
     </div>
     <div id="evolution-indicator" class="evolution-badge" style="display: none;">
@@ -726,14 +698,14 @@
       <!-- Compact Bottom Ribbon -->
       <div class="bottom-ribbon">
         <div class="legend-row">
-          <div class="legend-item"><span>⛺</span> <span>Home</span></div>
-          <div class="legend-item"><span>💧</span> <span>Lake</span></div>
+          <div class="legend-item"><span>⛺</span> <span>Home Base</span></div>
+          <div class="legend-item"><span>💧</span> <span>Water Lake</span></div>
           <div class="legend-item"><span>🍏</span> <span>Food</span></div>
           <div class="legend-item"><span>🌱</span> <span>Cooling</span></div>
           <div class="legend-item"><span>🌲</span> <span>Timber</span></div>
           <div class="legend-item"><span>🪵</span> <span>Stump</span></div>
-          <div class="legend-item"><span>⚠️</span> <span>Hazard</span></div>
-          <div class="legend-item"><span>🧙</span> <span>Villager</span></div>
+          <div class="legend-item"><span>⚠️</span> <span>Hazard Beast</span></div>
+          <div class="legend-item"><span>🧙</span> <span>Champion Hero</span></div>
         </div>
         <div class="day-progress-bar-bg">
           <div id="day-cycle-fill" class="day-progress-bar-fill" style="width: 25%;"></div>
@@ -741,25 +713,20 @@
       </div>
     </div>
 
-    <!-- Right: Telemetry & Operations (Zero Scroll) -->
+    <!-- Right: Telemetry & Operations (Single Champion Hero) -->
     <div class="panel sidebar-panel">
       
-      <!-- Top Row: Hero Vitals (Left) + Colony Stockpile & Live Events (Right) -->
+      <!-- Top Row: Champion Vitals (Left) + Colony Granary & Adventure Log (Right) -->
       <div class="sidebar-top-grid">
 
-        <!-- Card 1: Inspected Hero Homeostasis -->
+        <!-- Card 1: Champion Hero Homeostasis -->
         <div class="card">
           <div class="card-header">
             <div style="display:flex; align-items:center; gap:6px;">
-              <span id="hero-name-label">Hero #1 Homeostasis</span>
+              <span id="hero-name-label">Champion Homeostasis</span>
               <span id="hero-goal-badge" class="goal-badge">FORAGING</span>
             </div>
-            <span id="lineage-tag" style="color: var(--accent-cyan); font-size: 0.64rem;">Hero_01</span>
-          </div>
-
-          <!-- Quick Hero Selector Chips -->
-          <div class="hero-selector-bar" id="hero-selector-bar">
-            <!-- Populated dynamically: #1, #2, ... #8 -->
+            <span id="lineage-tag" style="color: var(--accent-cyan); font-size: 0.64rem;">Gen 1 Champion</span>
           </div>
 
           <!-- Vitals Grid -->
@@ -782,37 +749,37 @@
             </div>
           </div>
 
-          <!-- Backpack -->
+          <!-- Backpack (5 Slots) -->
           <div style="display: flex; justify-content: space-between; align-items: center; margin-top: auto; font-size: 0.68rem;">
-            <span style="color: var(--text-secondary);">Backpack (5 Slots):</span>
+            <span style="color: var(--text-secondary);">Backpack Inventory (5 Slots):</span>
             <div id="backpack-slots-container" class="backpack-slots"></div>
           </div>
         </div>
 
-        <!-- Card 2: Colony Stockpile & Live Events Feed -->
+        <!-- Card 2: Colony Granary & Adventure Chronology -->
         <div class="card">
           <div class="card-header">
-            <span>Colony Depot & Live Feed</span>
-            <span style="color: var(--accent-amber); font-size: 0.64rem;">24/7 Engine</span>
+            <span>Colony Granary & Adventure Log</span>
+            <span style="color: var(--accent-amber); font-size: 0.64rem;">Persistent 24/7</span>
           </div>
 
           <!-- Stockpile 3-Col -->
           <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; text-align: center;">
             <div class="stat-box">
               <div class="stat-box-val" id="colony-food" style="color: #4ade80;">0</div>
-              <div class="stat-box-lbl">Food 🍏</div>
+              <div class="stat-box-lbl">Food Stockpile 🍏</div>
             </div>
             <div class="stat-box">
               <div class="stat-box-val" id="colony-wood" style="color: #fbbf24;">0</div>
-              <div class="stat-box-lbl">Wood 🪵</div>
+              <div class="stat-box-lbl">Lumber Depot 🪵</div>
             </div>
             <div class="stat-box">
               <div class="stat-box-val" id="colony-rations" style="color: #38bdf8;">0</div>
-              <div class="stat-box-lbl">Meals 🍲</div>
+              <div class="stat-box-lbl">Emergency Meals 🍲</div>
             </div>
           </div>
 
-          <!-- Live Chronology Feed (Last 4 events visible without scrolling) -->
+          <!-- Live Adventure Log -->
           <div class="event-feed" id="event-feed"></div>
         </div>
 
@@ -821,7 +788,7 @@
       <!-- Bottom Row: 3-Stage Recurrent GRU Brain Architecture -->
       <div class="neural-card">
         <div class="card-header">
-          <span>Recurrent GRU Brain Architecture</span>
+          <span>Champion Neural Brain Architecture</span>
           <span style="font-size: 0.64rem; color: var(--accent-emerald);">6D Sensory ➔ 16D State ➔ 4D Motor</span>
         </div>
 
@@ -834,13 +801,13 @@
 
           <!-- GRU Hidden State 4x4 Heatmap (16D) -->
           <div class="neural-col">
-            <div class="col-title">GRU State (16D)</div>
+            <div class="col-title">GRU Recurrent State (16D)</div>
             <div id="matrix-hidden" class="hidden-matrix"></div>
           </div>
 
           <!-- Motor Actions (4D) -->
           <div class="neural-col">
-            <div class="col-title">Motor Actions (4D)</div>
+            <div class="col-title">Motor Decision (4D)</div>
             <div id="nodes-action" style="display:flex; flex-direction:column; gap:3px; flex:1; justify-content:space-between;"></div>
           </div>
         </div>

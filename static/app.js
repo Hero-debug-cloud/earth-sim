@@ -1,7 +1,6 @@
-// Unified Civilization Platform Client
+// Unified Living World Client · Single Champion Hero
 let ws = null;
 let currentState = null;
-let selectedHeroId = 1;
 let animBeacon = 0;
 
 const canvas = document.getElementById("world-canvas");
@@ -93,30 +92,6 @@ if (speedSlider) {
   });
 }
 
-// Canvas Click to Select Hero
-canvas.addEventListener("click", (e) => {
-  if (!currentState) return;
-  const rect = canvas.getBoundingClientRect();
-  const scaleX = canvas.width / rect.width;
-  const scaleY = canvas.height / rect.height;
-  const clickX = (e.clientX - rect.left) * scaleX;
-  const clickY = (e.clientY - rect.top) * scaleY;
-
-  const size = currentState.grid_size || 14;
-  const cellSize = canvas.width / size;
-  const col = Math.floor(clickX / cellSize);
-  const row = Math.floor(clickY / cellSize);
-
-  const hero = currentState.heroes.find((h) => h.r === row && h.c === col);
-  if (hero) {
-    selectedHeroId = hero.id;
-    if (ws && ws.readyState === WebSocket.OPEN) {
-      ws.send(JSON.stringify({ action: "select_hero", id: hero.id }));
-    }
-    updateUI(currentState);
-  }
-});
-
 function updateUI(data) {
   if (!data) return;
 
@@ -129,9 +104,6 @@ function updateUI(data) {
 
   const statGranary = document.getElementById("stat-granary");
   if (statGranary) statGranary.textContent = `🍏 ${data.stockpile.food} | 🪵 ${data.stockpile.wood}`;
-
-  const statInspecting = document.getElementById("stat-inspecting");
-  if (statInspecting) statInspecting.textContent = `Hero #${selectedHeroId}`;
 
   // Evolution Indicator
   const evoBadge = document.getElementById("evolution-indicator");
@@ -161,40 +133,23 @@ function updateUI(data) {
     dayCycleFill.style.width = `${cycleProgress}%`;
   }
 
-  // Quick Hero Selector Bar (Chips #1 ... #8)
-  const selectorBar = document.getElementById("hero-selector-bar");
-  if (selectorBar && data.heroes) {
-    selectorBar.innerHTML = "";
-    data.heroes.forEach((h) => {
-      const chip = document.createElement("button");
-      chip.className = `hero-chip ${h.id === selectedHeroId ? "active" : ""}`;
-      chip.textContent = `#${h.id}`;
-      chip.title = `Hero #${h.id} (${h.goal}, ${Math.round(h.vitals.health)}% HP)`;
-      chip.addEventListener("click", () => {
-        selectedHeroId = h.id;
-        if (ws && ws.readyState === WebSocket.OPEN) {
-          ws.send(JSON.stringify({ action: "select_hero", id: h.id }));
-        }
-        updateUI(currentState);
-      });
-      selectorBar.appendChild(chip);
-    });
-  }
-
-  // Selected Hero Vitals & Biological Homeostasis
-  const inspectedHero = data.heroes.find((h) => h.id === selectedHeroId) || data.heroes[0];
-  if (inspectedHero) {
+  // Single Champion Hero Vitals & Homeostasis
+  const championHero = (data.heroes && data.heroes.length > 0) ? data.heroes[0] : null;
+  if (championHero) {
     const nameLabel = document.getElementById("hero-name-label");
-    if (nameLabel) nameLabel.textContent = `Hero #${inspectedHero.id} Homeostasis`;
+    if (nameLabel) nameLabel.textContent = `Champion Homeostasis`;
+
+    const lineageEl = document.getElementById("lineage-tag");
+    if (lineageEl) lineageEl.textContent = championHero.lineage || `Gen ${data.generation} Champion`;
 
     const goalBadge = document.getElementById("hero-goal-badge");
     if (goalBadge) {
-      goalBadge.textContent = inspectedHero.goal;
-      if (inspectedHero.goal === "REST") {
+      goalBadge.textContent = championHero.goal;
+      if (championHero.goal === "REST") {
         goalBadge.style.borderColor = "var(--accent-cyan)";
         goalBadge.style.color = "var(--accent-cyan)";
         goalBadge.style.background = "rgba(6, 182, 212, 0.15)";
-      } else if (inspectedHero.goal === "HYDRATE") {
+      } else if (championHero.goal === "HYDRATE") {
         goalBadge.style.borderColor = "#38bdf8";
         goalBadge.style.color = "#38bdf8";
         goalBadge.style.background = "rgba(56, 189, 248, 0.15)";
@@ -205,7 +160,7 @@ function updateUI(data) {
       }
     }
 
-    const v = inspectedHero.vitals;
+    const v = championHero.vitals;
     const valHealth = document.getElementById("val-health");
     const barHealth = document.getElementById("bar-health");
     if (valHealth && barHealth) {
@@ -238,7 +193,7 @@ function updateUI(data) {
     }
 
     // 5-Slot Backpack
-    const bp = inspectedHero.backpack;
+    const bp = championHero.backpack;
     const bpEl = document.getElementById("backpack-slots-container");
     if (bpEl) {
       bpEl.innerHTML = "";
@@ -262,10 +217,8 @@ function updateUI(data) {
   // Real-Time Neural Core Viewer
   if (data.brain) {
     const b = data.brain;
-    const lineageEl = document.getElementById("lineage-tag");
-    if (lineageEl) lineageEl.textContent = `Lineage: ${b.lineage}`;
 
-    // 1. Sensory Inputs (6D) with centered bipolar meters
+    // 1. Sensory Inputs (6D)
     const sensorContainer = document.getElementById("nodes-sensor");
     if (sensorContainer) {
       sensorContainer.innerHTML = "";
@@ -299,7 +252,7 @@ function updateUI(data) {
       });
     }
 
-    // 2. 16D GRU Hidden State 4x4 Heatmap Matrix
+    // 2. 16D GRU Hidden State Strictly 4x4 Heatmap Matrix (Zero Cutoff)
     const matrixContainer = document.getElementById("matrix-hidden");
     if (matrixContainer) {
       matrixContainer.innerHTML = "";
@@ -318,9 +271,9 @@ function updateUI(data) {
         cell.className = "matrix-cell";
         cell.style.background = bg;
         cell.style.borderColor = border;
-        cell.title = `GRU Node #${idx}: ${val.toFixed(3)}`;
+        cell.title = `GRU Dimension #${idx}: ${val.toFixed(3)}`;
         cell.innerHTML = `
-          <span style="font-size:0.56rem; opacity:0.65;">h${idx}</span>
+          <span style="font-size:0.52rem; opacity:0.65;">h${idx}</span>
           <span style="font-weight:700; font-size:0.62rem;">${val >= 0 ? "+" : ""}${val.toFixed(1)}</span>
         `;
         matrixContainer.appendChild(cell);
@@ -348,7 +301,7 @@ function updateUI(data) {
     }
   }
 
-  // Colony Depot Stats
+  // Colony Stockpile
   const cf = document.getElementById("colony-food");
   if (cf) cf.textContent = data.stockpile.food;
   const cw = document.getElementById("colony-wood");
@@ -356,12 +309,12 @@ function updateUI(data) {
   const cr = document.getElementById("colony-rations");
   if (cr) cr.textContent = data.emergency_rations;
 
-  // Event Chronology (Last 3 visible without scroll)
+  // Live Adventure Chronology (Last 4 events)
   if (data.events && data.events.length > 0) {
     const feed = document.getElementById("event-feed");
     if (feed) {
       feed.innerHTML = "";
-      data.events.slice(-3).reverse().forEach((ev) => {
+      data.events.slice(-4).reverse().forEach((ev) => {
         const line = document.createElement("div");
         line.style.whiteSpace = "nowrap";
         line.style.overflow = "hidden";
@@ -502,23 +455,22 @@ function render() {
     ctx.fillText("⚠️", x, y);
   });
 
-  // 3. Render Heroes
-  currentState.heroes.forEach((h) => {
+  // 3. Render the Champion Hero
+  if (currentState.heroes && currentState.heroes.length > 0) {
+    const h = currentState.heroes[0];
     const x = h.c * cellSize + cellSize * 0.5;
     const y = h.r * cellSize + cellSize * 0.5;
     const radius = cellSize * 0.32;
 
-    // Selected Beacon
-    if (h.id === selectedHeroId) {
-      const beaconR = cellSize * 0.45 + Math.sin(animBeacon) * (cellSize * 0.1);
-      ctx.strokeStyle = "rgba(6, 182, 212, 0.9)";
-      ctx.lineWidth = 2.5;
-      ctx.setLineDash([4, 4]);
-      ctx.beginPath();
-      ctx.arc(x, y, Math.max(4, beaconR), 0, Math.PI * 2);
-      ctx.stroke();
-      ctx.setLineDash([]);
-    }
+    // Active Beacon Ring
+    const beaconR = cellSize * 0.45 + Math.sin(animBeacon) * (cellSize * 0.1);
+    ctx.strokeStyle = "rgba(6, 182, 212, 0.9)";
+    ctx.lineWidth = 2.5;
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath();
+    ctx.arc(x, y, Math.max(4, beaconR), 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.setLineDash([]);
 
     // Health ring
     ctx.strokeStyle = h.vitals.health > 40 ? "#10b981" : "#ef4444";
@@ -538,7 +490,7 @@ function render() {
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.fillText(h.goal === "REST" ? "💤" : "🧙", x, y);
-  });
+  }
 }
 
 connectWS();

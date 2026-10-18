@@ -28,7 +28,7 @@
       height: 100vh;
       max-width: 100vw;
       max-height: 100vh;
-      overflow: hidden; /* Strict Zero-Scroll: fits in one view */
+      overflow: hidden; /* Strict Zero-Scroll: 100% single view */
       background-color: var(--bg-dark);
       color: var(--text-primary);
       display: flex;
@@ -335,7 +335,7 @@
       overflow: hidden;
     }
 
-    /* Top Row of Sidebar: Vitals (Left) + Colony Depot & Live Events (Right) */
+    /* Top Row of Sidebar: Champion Vitals (Left) + Colony Depot & Adventure Log (Right) */
     .sidebar-top-grid {
       display: grid;
       grid-template-columns: 1.15fr 1fr;
@@ -369,42 +369,10 @@
       flex-shrink: 0;
     }
 
-    /* Hero Quick Chips Bar */
-    .hero-selector-bar {
-      display: flex;
-      gap: 3px;
-      overflow-x: auto;
-      flex-shrink: 0;
-    }
-
-    .hero-chip {
-      background: var(--surface-3);
-      border: 1px solid var(--border-subtle);
+    .goal-badge {
       padding: 1px 6px;
       border-radius: 3px;
-      font-size: 0.66rem;
-      font-weight: 700;
-      color: var(--text-secondary);
-      cursor: pointer;
-      white-space: nowrap;
-      transition: all 0.1s;
-    }
-
-    .hero-chip:hover {
-      background: var(--surface-hover);
-      color: #fff;
-    }
-
-    .hero-chip.active {
-      border-color: var(--accent-cyan);
-      background: rgba(6, 182, 212, 0.18);
-      color: var(--accent-cyan);
-    }
-
-    .goal-badge {
-      padding: 1px 5px;
-      border-radius: 3px;
-      font-size: 0.62rem;
+      font-size: 0.64rem;
       font-weight: 700;
       background: rgba(16, 185, 129, 0.15);
       color: var(--accent-emerald);
@@ -451,14 +419,14 @@
     }
 
     .backpack-slot {
-      width: 18px;
-      height: 18px;
+      width: 20px;
+      height: 20px;
       border: 1px dashed var(--border-strong);
       border-radius: 3px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 0.72rem;
+      font-size: 0.75rem;
       background: rgba(0, 0, 0, 0.25);
     }
 
@@ -477,12 +445,12 @@
 
     .stat-box-val {
       font-family: ui-monospace, monospace;
-      font-size: 0.9rem;
+      font-size: 0.95rem;
       font-weight: 700;
     }
 
     .stat-box-lbl {
-      font-size: 0.58rem;
+      font-size: 0.6rem;
       color: var(--text-muted);
       margin-top: 1px;
     }
@@ -519,7 +487,7 @@
       flex: 1;
       min-height: 0;
       display: grid;
-      grid-template-columns: 1.05fr 1fr 1.05fr;
+      grid-template-columns: 1fr 1.35fr 1fr;
       gap: 6px;
       background: #090e1a;
       border: 1px solid var(--border-subtle);
@@ -588,28 +556,32 @@
       border-radius: 2px;
     }
 
-    /* 4x4 Heatmap Matrix for 16 GRU Hidden Nodes */
+    /* 4x4 Heatmap Matrix for 16 GRU Hidden Nodes (Zero Cutoff, strictly 4x4) */
     .hidden-matrix {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
+      grid-template-rows: repeat(4, 1fr);
       gap: 3px;
       flex: 1;
       min-height: 0;
+      overflow: hidden;
     }
 
     .matrix-cell {
-      aspect-ratio: 1 / 1;
+      min-width: 0;
+      min-height: 0;
       border-radius: 3px;
       border: 1px solid var(--border-subtle);
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      font-size: 0.58rem;
+      font-size: 0.55rem;
       font-family: ui-monospace, monospace;
       color: #fff;
       transition: background 0.15s;
-      line-height: 1;
+      line-height: 1.1;
+      padding: 1px;
     }
 
     /* Action Output Cards */
