@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Civilization Platform · Living World & Neural Brain</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Civilization Platform · Living World & Neural Architecture</title>
   <style>
     :root {
       --bg-dark: #070a12;
@@ -30,44 +30,47 @@
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
 
-    body {
+    html, body {
+      width: 100vw;
+      height: 100vh;
+      max-width: 100vw;
+      max-height: 100vh;
+      overflow: hidden; /* Strict Zero-Scroll: fits in one view */
       background-color: var(--bg-dark);
       color: var(--text-primary);
-      height: 100vh;
       display: flex;
       flex-direction: column;
-      overflow: hidden;
     }
 
-    /* Top Navigation Header */
+    /* Top Navigation Header (40px) */
     header {
       background: var(--surface-1);
       border-bottom: 1px solid var(--border-subtle);
-      padding: 8px 20px;
+      padding: 4px 16px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       flex-shrink: 0;
-      height: 52px;
+      height: 40px;
     }
 
     .logo-group {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
     }
 
     .logo-badge {
       background: linear-gradient(135deg, #059669, #0284c7);
-      padding: 4px 10px;
-      border-radius: 6px;
+      padding: 3px 8px;
+      border-radius: 4px;
       font-weight: 700;
-      font-size: 0.78rem;
+      font-size: 0.72rem;
       letter-spacing: 0.05em;
     }
 
     .title {
-      font-size: 0.95rem;
+      font-size: 0.86rem;
       font-weight: 600;
       color: #fff;
     }
@@ -75,16 +78,16 @@
     .controls-group {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
     }
 
     .evolution-control {
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 5px;
       background: var(--surface-2);
-      padding: 3px 8px;
-      border-radius: 6px;
+      padding: 2px 6px;
+      border-radius: 4px;
       border: 1px solid var(--border-subtle);
     }
 
@@ -92,11 +95,11 @@
       background: #090e18;
       border: 1px solid var(--border-strong);
       color: #fff;
-      border-radius: 4px;
-      padding: 3px 6px;
+      border-radius: 3px;
+      padding: 2px 4px;
       font-family: ui-monospace, monospace;
-      font-size: 0.8rem;
-      width: 48px;
+      font-size: 0.75rem;
+      width: 40px;
       text-align: center;
       outline: none;
     }
@@ -105,15 +108,16 @@
       background: var(--surface-2);
       border: 1px solid var(--border-subtle);
       color: #fff;
-      padding: 5px 12px;
-      border-radius: 6px;
+      padding: 3px 10px;
+      border-radius: 4px;
       cursor: pointer;
-      font-size: 0.78rem;
+      font-size: 0.74rem;
       font-weight: 600;
-      transition: all 0.15s ease-out;
+      transition: all 0.12s ease-out;
       display: inline-flex;
       align-items: center;
-      gap: 6px;
+      gap: 4px;
+      line-height: 1.4;
     }
 
     .btn:hover {
@@ -148,45 +152,45 @@
     .speed-control {
       display: flex;
       align-items: center;
-      gap: 6px;
-      font-size: 0.78rem;
+      gap: 5px;
+      font-size: 0.72rem;
       color: var(--text-secondary);
     }
 
     .speed-control input[type="range"] {
-      width: 70px;
+      width: 55px;
       accent-color: var(--accent-cyan);
     }
 
     .divider-v {
       width: 1px;
-      height: 20px;
+      height: 16px;
       background: var(--border-subtle);
     }
 
-    /* Status Bar */
+    /* Status Bar (26px) */
     .status-bar {
-      background: #0a0f1d;
+      background: #090e1a;
       border-bottom: 1px solid var(--border-subtle);
-      padding: 5px 20px;
+      padding: 2px 16px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      font-size: 0.78rem;
+      font-size: 0.72rem;
       flex-shrink: 0;
-      height: 34px;
+      height: 26px;
     }
 
     .status-tags {
       display: flex;
-      gap: 16px;
+      gap: 14px;
       align-items: center;
     }
 
     .tag {
       display: flex;
       align-items: center;
-      gap: 5px;
+      gap: 4px;
     }
 
     .tag-label {
@@ -202,9 +206,9 @@
       background: rgba(245, 158, 11, 0.15);
       border: 1px solid var(--accent-amber);
       color: var(--accent-amber);
-      font-size: 0.72rem;
+      font-size: 0.68rem;
       font-weight: 700;
-      padding: 2px 8px;
+      padding: 1px 6px;
       border-radius: 4px;
       animation: pulse-badge 1s infinite alternate;
     }
@@ -214,14 +218,15 @@
       to { opacity: 1; }
     }
 
-    /* Master Layout */
+    /* Master Layout: 100% Viewport Fit, Zero Scroll */
     .master-layout {
       display: grid;
-      grid-template-columns: minmax(480px, 1fr) 520px;
-      gap: 12px;
-      padding: 12px 18px;
+      grid-template-columns: minmax(360px, 1fr) minmax(480px, 1.35fr);
+      gap: 8px;
+      padding: 6px 12px 8px 12px;
       flex: 1;
-      height: calc(100vh - 86px);
+      height: calc(100vh - 66px);
+      max-height: calc(100vh - 66px);
       box-sizing: border-box;
       overflow: hidden;
     }
@@ -229,82 +234,91 @@
     .panel {
       background: var(--surface-1);
       border: 1px solid var(--border-subtle);
-      border-radius: 10px;
-      padding: 12px;
+      border-radius: 8px;
+      padding: 8px;
       display: flex;
       flex-direction: column;
-      gap: 10px;
       overflow: hidden;
+      min-height: 0;
     }
 
     .panel-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      font-size: 0.76rem;
+      font-size: 0.72rem;
       font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: 0.05em;
+      letter-spacing: 0.04em;
       color: var(--text-secondary);
       flex-shrink: 0;
+      margin-bottom: 4px;
     }
 
-    /* Left Panel: Canvas + Modern Bottom Ribbon */
+    /* Left Column: Canvas + Bottom Ribbon */
     .canvas-panel {
       display: flex;
       flex-direction: column;
       justify-content: space-between;
+      gap: 6px;
+      height: 100%;
+      min-height: 0;
     }
 
     .canvas-wrapper {
       position: relative;
       width: 100%;
       flex: 1;
+      min-height: 0;
       display: flex;
       justify-content: center;
       align-items: center;
       background: #050811;
-      border-radius: 8px;
+      border-radius: 6px;
       border: 1px solid var(--border-subtle);
       overflow: hidden;
     }
 
     #world-canvas {
+      width: auto;
+      height: auto;
       max-width: 100%;
       max-height: 100%;
       aspect-ratio: 1 / 1;
       image-rendering: pixelated;
     }
 
-    /* Bottom Environmental Ribbon (Completely Redesigned) */
+    /* Compact Bottom Environmental Ribbon (36px) */
     .bottom-ribbon {
       background: var(--surface-2);
       border: 1px solid var(--border-subtle);
-      border-radius: 8px;
-      padding: 8px 12px;
+      border-radius: 6px;
+      padding: 4px 8px;
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 4px;
       flex-shrink: 0;
+      height: 38px;
     }
 
     .legend-row {
       display: flex;
-      flex-wrap: wrap;
+      flex-wrap: nowrap;
       justify-content: space-between;
       align-items: center;
-      font-size: 0.72rem;
+      font-size: 0.68rem;
       color: var(--text-secondary);
     }
 
     .legend-item {
       display: flex;
       align-items: center;
-      gap: 4px;
+      gap: 3px;
+      white-space: nowrap;
     }
 
     .day-progress-bar-bg {
-      height: 4px;
+      height: 3px;
       background: rgba(255, 255, 255, 0.08);
       border-radius: 2px;
       overflow: hidden;
@@ -318,95 +332,86 @@
       transition: width 0.2s;
     }
 
-    /* Right Panel: High-Craft Neural & Operations Sidebar */
+    /* Right Column: Split 2-Row Layout */
     .sidebar-panel {
       display: flex;
       flex-direction: column;
-      gap: 10px;
-      overflow-y: auto;
+      gap: 6px;
+      height: 100%;
+      min-height: 0;
+      overflow: hidden;
     }
 
-    .sidebar-tabs {
-      display: flex;
-      gap: 4px;
-      background: var(--surface-2);
-      padding: 3px;
-      border-radius: 6px;
-      border: 1px solid var(--border-subtle);
+    /* Top Row of Sidebar: Vitals (Left) + Colony Depot & Live Events (Right) */
+    .sidebar-top-grid {
+      display: grid;
+      grid-template-columns: 1.15fr 1fr;
+      gap: 6px;
       flex-shrink: 0;
-    }
-
-    .sidebar-tab {
-      flex: 1;
-      background: transparent;
-      border: none;
-      color: var(--text-secondary);
-      padding: 5px 8px;
-      border-radius: 4px;
-      font-size: 0.75rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.15s;
-    }
-
-    .sidebar-tab.active {
-      background: var(--surface-hover);
-      color: #fff;
-      border: 1px solid var(--border-strong);
+      height: 48%;
+      min-height: 0;
     }
 
     .card {
       background: var(--surface-2);
       border: 1px solid var(--border-subtle);
-      border-radius: 8px;
-      padding: 10px 12px;
+      border-radius: 6px;
+      padding: 6px 8px;
       display: flex;
       flex-direction: column;
-      gap: 8px;
-      flex-shrink: 0;
+      gap: 5px;
+      overflow: hidden;
+      min-height: 0;
     }
 
     .card-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      font-size: 0.74rem;
+      font-size: 0.7rem;
       font-weight: 700;
       color: var(--text-secondary);
       text-transform: uppercase;
-      letter-spacing: 0.04em;
+      letter-spacing: 0.03em;
+      flex-shrink: 0;
     }
 
-    /* Hero Selection Bar */
+    /* Hero Quick Chips Bar */
     .hero-selector-bar {
       display: flex;
-      gap: 4px;
+      gap: 3px;
       overflow-x: auto;
-      padding-bottom: 2px;
+      flex-shrink: 0;
     }
 
     .hero-chip {
       background: var(--surface-3);
       border: 1px solid var(--border-subtle);
-      padding: 2px 7px;
-      border-radius: 4px;
-      font-size: 0.7rem;
-      font-weight: 600;
+      padding: 1px 6px;
+      border-radius: 3px;
+      font-size: 0.66rem;
+      font-weight: 700;
       color: var(--text-secondary);
       cursor: pointer;
       white-space: nowrap;
+      transition: all 0.1s;
+    }
+
+    .hero-chip:hover {
+      background: var(--surface-hover);
+      color: #fff;
     }
 
     .hero-chip.active {
       border-color: var(--accent-cyan);
-      background: rgba(6, 182, 212, 0.15);
+      background: rgba(6, 182, 212, 0.18);
       color: var(--accent-cyan);
     }
 
     .goal-badge {
-      padding: 2px 8px;
-      border-radius: 4px;
-      font-size: 0.68rem;
+      padding: 1px 5px;
+      border-radius: 3px;
+      font-size: 0.62rem;
       font-weight: 700;
       background: rgba(16, 185, 129, 0.15);
       color: var(--accent-emerald);
@@ -417,49 +422,50 @@
     .vitals-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 6px 12px;
+      gap: 4px 8px;
+      flex-shrink: 0;
     }
 
     .vital-item {
       display: flex;
       flex-direction: column;
-      gap: 3px;
+      gap: 2px;
     }
 
     .vital-header {
       display: flex;
       justify-content: space-between;
-      font-size: 0.7rem;
+      font-size: 0.65rem;
       color: var(--text-secondary);
     }
 
     .bar-bg {
-      height: 5px;
+      height: 4px;
       background: rgba(255, 255, 255, 0.08);
-      border-radius: 3px;
+      border-radius: 2px;
       overflow: hidden;
     }
 
     .bar-fill {
       height: 100%;
-      border-radius: 3px;
+      border-radius: 2px;
       transition: width 0.15s;
     }
 
     .backpack-slots {
       display: flex;
-      gap: 4px;
+      gap: 3px;
     }
 
     .backpack-slot {
-      width: 22px;
-      height: 22px;
+      width: 18px;
+      height: 18px;
       border: 1px dashed var(--border-strong);
-      border-radius: 4px;
+      border-radius: 3px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 0.8rem;
+      font-size: 0.72rem;
       background: rgba(0, 0, 0, 0.25);
     }
 
@@ -468,38 +474,92 @@
       background: rgba(16, 185, 129, 0.15);
     }
 
-    /* Real-Time Neural Core Visualizer (Completely Redesigned) */
+    /* Colony Depot & Events Card */
+    .stat-box {
+      background: var(--surface-1);
+      border: 1px solid var(--border-subtle);
+      border-radius: 4px;
+      padding: 3px;
+    }
+
+    .stat-box-val {
+      font-family: ui-monospace, monospace;
+      font-size: 0.9rem;
+      font-weight: 700;
+    }
+
+    .stat-box-lbl {
+      font-size: 0.58rem;
+      color: var(--text-muted);
+      margin-top: 1px;
+    }
+
+    .event-feed {
+      flex: 1;
+      min-height: 0;
+      overflow-y: hidden;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      font-family: ui-monospace, monospace;
+      font-size: 0.64rem;
+      color: var(--text-secondary);
+      border-top: 1px solid var(--border-subtle);
+      padding-top: 3px;
+    }
+
+    /* Bottom Row of Sidebar: 3-Stage Neural Core Board */
+    .neural-card {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      background: var(--surface-2);
+      border: 1px solid var(--border-subtle);
+      border-radius: 6px;
+      padding: 6px 8px;
+      overflow: hidden;
+    }
+
     .neural-board {
+      flex: 1;
+      min-height: 0;
       display: grid;
-      grid-template-columns: 1.1fr 1fr 1.1fr;
-      gap: 8px;
+      grid-template-columns: 1.05fr 1fr 1.05fr;
+      gap: 6px;
       background: #090e1a;
       border: 1px solid var(--border-subtle);
-      border-radius: 8px;
-      padding: 8px;
+      border-radius: 6px;
+      padding: 5px 6px;
+      overflow: hidden;
     }
 
     .neural-col {
       display: flex;
       flex-direction: column;
-      gap: 4px;
+      gap: 3px;
+      overflow: hidden;
+      min-height: 0;
     }
 
     .col-title {
-      font-size: 0.65rem;
+      font-size: 0.62rem;
       font-weight: 700;
       color: var(--text-muted);
       text-transform: uppercase;
       border-bottom: 1px solid var(--border-subtle);
-      padding-bottom: 3px;
-      margin-bottom: 2px;
+      padding-bottom: 2px;
+      margin-bottom: 1px;
+      flex-shrink: 0;
     }
 
+    /* Sensory Inputs */
     .sensor-row {
       background: var(--surface-1);
       border: 1px solid var(--border-subtle);
-      border-radius: 4px;
-      padding: 3px 6px;
+      border-radius: 3px;
+      padding: 2px 5px;
       display: flex;
       flex-direction: column;
       gap: 2px;
@@ -508,8 +568,9 @@
     .sensor-header {
       display: flex;
       justify-content: space-between;
-      font-size: 0.66rem;
+      font-size: 0.62rem;
       color: var(--text-secondary);
+      line-height: 1;
     }
 
     .sensor-val {
@@ -518,9 +579,8 @@
       color: var(--accent-cyan);
     }
 
-    /* Bipolar Meter (shows negative to positive) */
     .bipolar-bar {
-      height: 4px;
+      height: 3px;
       background: rgba(255, 255, 255, 0.06);
       border-radius: 2px;
       position: relative;
@@ -539,29 +599,32 @@
     .hidden-matrix {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      gap: 4px;
+      gap: 3px;
+      flex: 1;
+      min-height: 0;
     }
 
     .matrix-cell {
       aspect-ratio: 1 / 1;
-      border-radius: 4px;
+      border-radius: 3px;
       border: 1px solid var(--border-subtle);
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      font-size: 0.62rem;
+      font-size: 0.58rem;
       font-family: ui-monospace, monospace;
       color: #fff;
       transition: background 0.15s;
+      line-height: 1;
     }
 
     /* Action Output Cards */
     .action-row {
       background: var(--surface-1);
       border: 1px solid var(--border-subtle);
-      border-radius: 4px;
-      padding: 4px 6px;
+      border-radius: 3px;
+      padding: 3px 5px;
       display: flex;
       flex-direction: column;
       gap: 2px;
@@ -575,74 +638,14 @@
     .action-header {
       display: flex;
       justify-content: space-between;
-      font-size: 0.68rem;
+      font-size: 0.64rem;
       font-weight: 600;
+      line-height: 1;
     }
 
     .action-row.chosen .action-header {
       color: var(--accent-emerald);
       font-weight: 700;
-    }
-
-    /* Roster Table */
-    .roster-list {
-      max-height: 160px;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .roster-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 4px 8px;
-      border-radius: 4px;
-      background: var(--surface-1);
-      border: 1px solid var(--border-subtle);
-      font-size: 0.72rem;
-      cursor: pointer;
-      transition: all 0.1s;
-    }
-
-    .roster-item:hover {
-      background: var(--surface-hover);
-    }
-
-    .roster-item.active {
-      border-color: var(--accent-cyan);
-      background: rgba(6, 182, 212, 0.12);
-    }
-
-    .event-feed {
-      max-height: 100px;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      gap: 3px;
-      font-family: ui-monospace, monospace;
-      font-size: 0.68rem;
-      color: var(--text-secondary);
-    }
-
-    .stat-box {
-      background: var(--surface-1);
-      border: 1px solid var(--border-subtle);
-      border-radius: 6px;
-      padding: 6px;
-    }
-
-    .stat-box-val {
-      font-family: ui-monospace, monospace;
-      font-size: 1.05rem;
-      font-weight: 700;
-    }
-
-    .stat-box-lbl {
-      font-size: 0.65rem;
-      color: var(--text-muted);
-      margin-top: 2px;
     }
   </style>
 </head>
@@ -652,13 +655,13 @@
   <header>
     <div class="logo-group">
       <span class="logo-badge">CIVILIZATION</span>
-      <span class="title">Persistent Living World & Neural Architecture</span>
+      <span class="title">Living World & Neural Architecture</span>
     </div>
 
     <!-- Central Evolution & Simulation Controls -->
     <div class="controls-group">
       <div class="evolution-control">
-        <label for="evolve-gens-input" style="font-size: 0.74rem; color: var(--text-secondary); font-weight: 600;">Adapt:</label>
+        <label for="evolve-gens-input" style="font-size: 0.7rem; color: var(--text-secondary); font-weight: 600;">Adapt:</label>
         <input type="number" id="evolve-gens-input" min="1" max="100" value="10">
         <button id="btn-evolve" class="btn btn-evolve">🧬 Evolve</button>
       </div>
@@ -668,7 +671,7 @@
       <div class="speed-control">
         <span>Speed:</span>
         <input type="range" id="speed-slider" min="1" max="40" value="6" step="1">
-        <span id="speed-label" style="font-family: monospace; min-width: 22px;">6x</span>
+        <span id="speed-label" style="font-family: monospace; min-width: 20px;">6x</span>
       </div>
 
       <button id="btn-play-pause" class="btn btn-primary">⏸ Pause</button>
@@ -685,7 +688,7 @@
         <span id="connection-status" class="tag-val" style="color: var(--accent-emerald);">Connecting...</span>
       </div>
       <div class="tag">
-        <span class="tag-label">Generation:</span>
+        <span class="tag-label">Gen:</span>
         <span id="stat-gen" class="tag-val" style="color: #38bdf8;">1</span>
       </div>
       <div class="tag">
@@ -706,30 +709,30 @@
     </div>
   </div>
 
-  <!-- Master 2-Column Split Layout -->
+  <!-- Master Zero-Scroll 2-Column Split Layout -->
   <main class="master-layout">
     
-    <!-- Left: World Canvas + Redesigned Bottom Ribbon -->
+    <!-- Left: World Canvas + Bottom Ribbon -->
     <div class="panel canvas-panel">
       <div class="panel-header">
         <span>The Living World (14x14 Grid)</span>
-        <span style="font-size: 0.7rem; color: #f87171;">Dynamic Moving Hazards Active ⚠️</span>
+        <span style="font-size: 0.68rem; color: #f87171;">Hazards Moving Active ⚠️</span>
       </div>
 
       <div class="canvas-wrapper">
         <canvas id="world-canvas" width="600" height="600"></canvas>
       </div>
 
-      <!-- Completely Redesigned Bottom Ribbon -->
+      <!-- Compact Bottom Ribbon -->
       <div class="bottom-ribbon">
         <div class="legend-row">
-          <div class="legend-item"><span>⛺</span> <span>Home Base</span></div>
-          <div class="legend-item"><span>💧</span> <span>Water Lake</span></div>
-          <div class="legend-item"><span>🍏</span> <span>Ripe Bush</span></div>
-          <div class="legend-item"><span>🌱</span> <span>Cooldown</span></div>
+          <div class="legend-item"><span>⛺</span> <span>Home</span></div>
+          <div class="legend-item"><span>💧</span> <span>Lake</span></div>
+          <div class="legend-item"><span>🍏</span> <span>Food</span></div>
+          <div class="legend-item"><span>🌱</span> <span>Cooling</span></div>
           <div class="legend-item"><span>🌲</span> <span>Timber</span></div>
           <div class="legend-item"><span>🪵</span> <span>Stump</span></div>
-          <div class="legend-item"><span>⚠️</span> <span>Moving Hazard</span></div>
+          <div class="legend-item"><span>⚠️</span> <span>Hazard</span></div>
           <div class="legend-item"><span>🧙</span> <span>Villager</span></div>
         </div>
         <div class="day-progress-bar-bg">
@@ -738,65 +741,95 @@
       </div>
     </div>
 
-    <!-- Right: Completely Redesigned Neural Brain & Operations Sidebar -->
+    <!-- Right: Telemetry & Operations (Zero Scroll) -->
     <div class="panel sidebar-panel">
       
-      <!-- Quick Hero Selector Bar -->
-      <div class="card" style="padding: 8px 10px;">
-        <div class="card-header">
-          <span>Active Villagers (Select to Inspect)</span>
-          <span id="lineage-tag" style="color: var(--accent-cyan); font-size: 0.68rem;">Lineage: Hero_01</span>
+      <!-- Top Row: Hero Vitals (Left) + Colony Stockpile & Live Events (Right) -->
+      <div class="sidebar-top-grid">
+
+        <!-- Card 1: Inspected Hero Homeostasis -->
+        <div class="card">
+          <div class="card-header">
+            <div style="display:flex; align-items:center; gap:6px;">
+              <span id="hero-name-label">Hero #1 Homeostasis</span>
+              <span id="hero-goal-badge" class="goal-badge">FORAGING</span>
+            </div>
+            <span id="lineage-tag" style="color: var(--accent-cyan); font-size: 0.64rem;">Hero_01</span>
+          </div>
+
+          <!-- Quick Hero Selector Chips -->
+          <div class="hero-selector-bar" id="hero-selector-bar">
+            <!-- Populated dynamically: #1, #2, ... #8 -->
+          </div>
+
+          <!-- Vitals Grid -->
+          <div class="vitals-grid">
+            <div class="vital-item">
+              <div class="vital-header"><span>Health</span><span id="val-health">100%</span></div>
+              <div class="bar-bg"><div id="bar-health" class="bar-fill" style="width: 100%; background: var(--accent-emerald);"></div></div>
+            </div>
+            <div class="vital-item">
+              <div class="vital-header"><span>Energy</span><span id="val-energy">100%</span></div>
+              <div class="bar-bg"><div id="bar-energy" class="bar-fill" style="width: 100%; background: var(--accent-cyan);"></div></div>
+            </div>
+            <div class="vital-item">
+              <div class="vital-header"><span>Hunger</span><span id="val-hunger">0%</span></div>
+              <div class="bar-bg"><div id="bar-hunger" class="bar-fill" style="width: 0%; background: var(--accent-amber);"></div></div>
+            </div>
+            <div class="vital-item">
+              <div class="vital-header"><span>Thirst</span><span id="val-thirst">0%</span></div>
+              <div class="bar-bg"><div id="bar-thirst" class="bar-fill" style="width: 0%; background: var(--accent-cyan);"></div></div>
+            </div>
+          </div>
+
+          <!-- Backpack -->
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: auto; font-size: 0.68rem;">
+            <span style="color: var(--text-secondary);">Backpack (5 Slots):</span>
+            <div id="backpack-slots-container" class="backpack-slots"></div>
+          </div>
         </div>
-        <div class="hero-selector-bar" id="hero-selector-bar">
-          <!-- Populated by JS -->
+
+        <!-- Card 2: Colony Stockpile & Live Events Feed -->
+        <div class="card">
+          <div class="card-header">
+            <span>Colony Depot & Live Feed</span>
+            <span style="color: var(--accent-amber); font-size: 0.64rem;">24/7 Engine</span>
+          </div>
+
+          <!-- Stockpile 3-Col -->
+          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; text-align: center;">
+            <div class="stat-box">
+              <div class="stat-box-val" id="colony-food" style="color: #4ade80;">0</div>
+              <div class="stat-box-lbl">Food 🍏</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-box-val" id="colony-wood" style="color: #fbbf24;">0</div>
+              <div class="stat-box-lbl">Wood 🪵</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-box-val" id="colony-rations" style="color: #38bdf8;">0</div>
+              <div class="stat-box-lbl">Meals 🍲</div>
+            </div>
+          </div>
+
+          <!-- Live Chronology Feed (Last 4 events visible without scrolling) -->
+          <div class="event-feed" id="event-feed"></div>
         </div>
+
       </div>
 
-      <!-- Hero Vitals & Backpack Card -->
-      <div class="card">
-        <div class="card-header">
-          <span id="hero-name-label">Hero #1 Biological Homeostasis</span>
-          <span id="hero-goal-badge" class="goal-badge">FORAGING</span>
-        </div>
-
-        <div class="vitals-grid">
-          <div class="vital-item">
-            <div class="vital-header"><span>Health</span><span id="val-health">100%</span></div>
-            <div class="bar-bg"><div id="bar-health" class="bar-fill" style="width: 100%; background: var(--accent-emerald);"></div></div>
-          </div>
-          <div class="vital-item">
-            <div class="vital-header"><span>Energy</span><span id="val-energy">100%</span></div>
-            <div class="bar-bg"><div id="bar-energy" class="bar-fill" style="width: 100%; background: var(--accent-cyan);"></div></div>
-          </div>
-          <div class="vital-item">
-            <div class="vital-header"><span>Hunger</span><span id="val-hunger">0%</span></div>
-            <div class="bar-bg"><div id="bar-hunger" class="bar-fill" style="width: 0%; background: var(--accent-amber);"></div></div>
-          </div>
-          <div class="vital-item">
-            <div class="vital-header"><span>Thirst</span><span id="val-thirst">0%</span></div>
-            <div class="bar-bg"><div id="bar-thirst" class="bar-fill" style="width: 0%; background: var(--accent-cyan);"></div></div>
-          </div>
-        </div>
-
-        <!-- Backpack -->
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 2px; font-size: 0.72rem;">
-          <span style="color: var(--text-secondary);">Backpack Inventory:</span>
-          <div id="backpack-slots-container" class="backpack-slots"></div>
-        </div>
-      </div>
-
-      <!-- Completely Redesigned Real-Time Neural Core -->
-      <div class="card" style="flex: 1;">
+      <!-- Bottom Row: 3-Stage Recurrent GRU Brain Architecture -->
+      <div class="neural-card">
         <div class="card-header">
           <span>Recurrent GRU Brain Architecture</span>
-          <span style="font-size: 0.68rem; color: var(--accent-emerald);">6D Input → 16D State → 4D Motor</span>
+          <span style="font-size: 0.64rem; color: var(--accent-emerald);">6D Sensory ➔ 16D State ➔ 4D Motor</span>
         </div>
 
         <div class="neural-board">
           <!-- Sensory Inputs (6D) -->
           <div class="neural-col">
             <div class="col-title">Sensory Inputs (6D)</div>
-            <div id="nodes-sensor" style="display:flex; flex-direction:column; gap:3px;"></div>
+            <div id="nodes-sensor" style="display:flex; flex-direction:column; gap:2px; flex:1; justify-content:space-between;"></div>
           </div>
 
           <!-- GRU Hidden State 4x4 Heatmap (16D) -->
@@ -808,41 +841,8 @@
           <!-- Motor Actions (4D) -->
           <div class="neural-col">
             <div class="col-title">Motor Actions (4D)</div>
-            <div id="nodes-action" style="display:flex; flex-direction:column; gap:4px;"></div>
+            <div id="nodes-action" style="display:flex; flex-direction:column; gap:3px; flex:1; justify-content:space-between;"></div>
           </div>
-        </div>
-      </div>
-
-      <!-- Bottom Card: Colony Depot & Event Chronology Tabs -->
-      <div class="card">
-        <div class="sidebar-tabs" style="margin-bottom: 6px;">
-          <button class="sidebar-tab active" data-tab="colony">🏕️ Colony Stockpile</button>
-          <button class="sidebar-tab" data-tab="events">📜 Event Chronology</button>
-        </div>
-
-        <!-- Tab 1: Colony Stockpile & Roster -->
-        <div id="tab-colony-content" style="display: flex; flex-direction: column; gap: 8px;">
-          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; text-align: center;">
-            <div class="stat-box">
-              <div class="stat-box-val" id="colony-food" style="color: #4ade80;">0</div>
-              <div class="stat-box-lbl">Food Stockpile 🍏</div>
-            </div>
-            <div class="stat-box">
-              <div class="stat-box-val" id="colony-wood" style="color: #fbbf24;">0</div>
-              <div class="stat-box-lbl">Lumber Depot 🪵</div>
-            </div>
-            <div class="stat-box">
-              <div class="stat-box-val" id="colony-rations" style="color: #38bdf8;">0</div>
-              <div class="stat-box-lbl">Emergency Meals 🍲</div>
-            </div>
-          </div>
-
-          <div class="roster-list" id="roster-container"></div>
-        </div>
-
-        <!-- Tab 2: Event Chronology -->
-        <div id="tab-events-content" style="display: none;">
-          <div class="event-feed" id="event-feed"></div>
         </div>
       </div>
 

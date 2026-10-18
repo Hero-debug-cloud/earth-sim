@@ -93,26 +93,6 @@ if (speedSlider) {
   });
 }
 
-// Sidebar Tab Switching
-document.querySelectorAll(".sidebar-tab").forEach((tab) => {
-  tab.addEventListener("click", () => {
-    document.querySelectorAll(".sidebar-tab").forEach((t) => t.classList.remove("active"));
-    tab.classList.add("active");
-    const target = tab.dataset.tab;
-    const colonyContent = document.getElementById("tab-colony-content");
-    const eventsContent = document.getElementById("tab-events-content");
-    if (colonyContent && eventsContent) {
-      if (target === "colony") {
-        colonyContent.style.display = "flex";
-        eventsContent.style.display = "none";
-      } else {
-        colonyContent.style.display = "none";
-        eventsContent.style.display = "block";
-      }
-    }
-  });
-});
-
 // Canvas Click to Select Hero
 canvas.addEventListener("click", (e) => {
   if (!currentState) return;
@@ -181,14 +161,15 @@ function updateUI(data) {
     dayCycleFill.style.width = `${cycleProgress}%`;
   }
 
-  // Quick Hero Selector Bar (Top of right sidebar)
+  // Quick Hero Selector Bar (Chips #1 ... #8)
   const selectorBar = document.getElementById("hero-selector-bar");
   if (selectorBar && data.heroes) {
     selectorBar.innerHTML = "";
     data.heroes.forEach((h) => {
       const chip = document.createElement("button");
       chip.className = `hero-chip ${h.id === selectedHeroId ? "active" : ""}`;
-      chip.textContent = `Hero #${h.id}`;
+      chip.textContent = `#${h.id}`;
+      chip.title = `Hero #${h.id} (${h.goal}, ${Math.round(h.vitals.health)}% HP)`;
       chip.addEventListener("click", () => {
         selectedHeroId = h.id;
         if (ws && ws.readyState === WebSocket.OPEN) {
@@ -204,7 +185,7 @@ function updateUI(data) {
   const inspectedHero = data.heroes.find((h) => h.id === selectedHeroId) || data.heroes[0];
   if (inspectedHero) {
     const nameLabel = document.getElementById("hero-name-label");
-    if (nameLabel) nameLabel.textContent = `Hero #${inspectedHero.id} Biological Homeostasis`;
+    if (nameLabel) nameLabel.textContent = `Hero #${inspectedHero.id} Homeostasis`;
 
     const goalBadge = document.getElementById("hero-goal-badge");
     if (goalBadge) {
@@ -337,10 +318,10 @@ function updateUI(data) {
         cell.className = "matrix-cell";
         cell.style.background = bg;
         cell.style.borderColor = border;
-        cell.title = `GRU Dimension #${idx}: ${val.toFixed(3)}`;
+        cell.title = `GRU Node #${idx}: ${val.toFixed(3)}`;
         cell.innerHTML = `
-          <span style="font-size:0.58rem; opacity:0.65;">h${idx}</span>
-          <span style="font-weight:700; font-size:0.68rem;">${val >= 0 ? "+" : ""}${val.toFixed(1)}</span>
+          <span style="font-size:0.56rem; opacity:0.65;">h${idx}</span>
+          <span style="font-weight:700; font-size:0.62rem;">${val >= 0 ? "+" : ""}${val.toFixed(1)}</span>
         `;
         matrixContainer.appendChild(cell);
       });
@@ -375,36 +356,16 @@ function updateUI(data) {
   const cr = document.getElementById("colony-rations");
   if (cr) cr.textContent = data.emergency_rations;
 
-  // Roster in Colony tab
-  const rosterContainer = document.getElementById("roster-container");
-  if (rosterContainer) {
-    rosterContainer.innerHTML = "";
-    data.heroes.forEach((h) => {
-      const item = document.createElement("div");
-      item.className = `roster-item ${h.id === selectedHeroId ? "active" : ""}`;
-      const pack = "🍏".repeat(h.backpack.food) + "🪵".repeat(h.backpack.wood) || "empty";
-      item.innerHTML = `
-        <span><b>Hero #${h.id}</b> · ${Math.round(h.vitals.health)}% HP</span>
-        <span style="color:var(--text-secondary); font-size:0.7rem;">Pack: ${pack} · <i>${h.goal}</i></span>
-      `;
-      item.addEventListener("click", () => {
-        selectedHeroId = h.id;
-        if (ws && ws.readyState === WebSocket.OPEN) {
-          ws.send(JSON.stringify({ action: "select_hero", id: h.id }));
-        }
-        updateUI(currentState);
-      });
-      rosterContainer.appendChild(item);
-    });
-  }
-
-  // Event Chronology
+  // Event Chronology (Last 3 visible without scroll)
   if (data.events && data.events.length > 0) {
     const feed = document.getElementById("event-feed");
     if (feed) {
       feed.innerHTML = "";
-      data.events.slice().reverse().forEach((ev) => {
+      data.events.slice(-3).reverse().forEach((ev) => {
         const line = document.createElement("div");
+        line.style.whiteSpace = "nowrap";
+        line.style.overflow = "hidden";
+        line.style.textOverflow = "ellipsis";
         line.textContent = `[T${data.tick}] ${ev}`;
         feed.appendChild(line);
       });
