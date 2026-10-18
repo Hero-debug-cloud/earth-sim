@@ -4,7 +4,647 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Civilization Platform · Living World & Neural Brain</title>
-  <link rel="stylesheet" href="/static/style.css">
+  <style>
+    :root {
+      --bg-dark: #070a12;
+      --surface-1: #0d1322;
+      --surface-2: #141c2e;
+      --surface-3: #1a253c;
+      --surface-hover: #212f4d;
+      --border-subtle: #1e2b45;
+      --border-strong: #2c3e63;
+      --accent-cyan: #06b6d4;
+      --accent-emerald: #10b981;
+      --accent-amber: #f59e0b;
+      --accent-rose: #f43f5e;
+      --accent-purple: #8b5cf6;
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-primary);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* Top Navigation Header */
+    header {
+      background: var(--surface-1);
+      border-bottom: 1px solid var(--border-subtle);
+      padding: 8px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+      height: 52px;
+    }
+
+    .logo-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logo-badge {
+      background: linear-gradient(135deg, #059669, #0284c7);
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-weight: 700;
+      font-size: 0.78rem;
+      letter-spacing: 0.05em;
+    }
+
+    .title {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #fff;
+    }
+
+    .controls-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .evolution-control {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--surface-2);
+      padding: 3px 8px;
+      border-radius: 6px;
+      border: 1px solid var(--border-subtle);
+    }
+
+    .evolution-control input {
+      background: #090e18;
+      border: 1px solid var(--border-strong);
+      color: #fff;
+      border-radius: 4px;
+      padding: 3px 6px;
+      font-family: ui-monospace, monospace;
+      font-size: 0.8rem;
+      width: 48px;
+      text-align: center;
+      outline: none;
+    }
+
+    .btn {
+      background: var(--surface-2);
+      border: 1px solid var(--border-subtle);
+      color: #fff;
+      padding: 5px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.78rem;
+      font-weight: 600;
+      transition: all 0.15s ease-out;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn:hover {
+      background: var(--surface-hover);
+      border-color: var(--border-strong);
+    }
+
+    .btn:active {
+      transform: scale(0.98);
+    }
+
+    .btn-primary {
+      background: var(--accent-cyan);
+      color: #000;
+      border: none;
+    }
+
+    .btn-primary:hover {
+      background: #22d3ee;
+    }
+
+    .btn-evolve {
+      background: linear-gradient(135deg, #f59e0b, #ef4444);
+      color: #fff;
+      border: none;
+    }
+
+    .btn-evolve:hover {
+      filter: brightness(1.1);
+    }
+
+    .speed-control {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.78rem;
+      color: var(--text-secondary);
+    }
+
+    .speed-control input[type="range"] {
+      width: 70px;
+      accent-color: var(--accent-cyan);
+    }
+
+    .divider-v {
+      width: 1px;
+      height: 20px;
+      background: var(--border-subtle);
+    }
+
+    /* Status Bar */
+    .status-bar {
+      background: #0a0f1d;
+      border-bottom: 1px solid var(--border-subtle);
+      padding: 5px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.78rem;
+      flex-shrink: 0;
+      height: 34px;
+    }
+
+    .status-tags {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+    }
+
+    .tag {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .tag-label {
+      color: var(--text-muted);
+    }
+
+    .tag-val {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-weight: 600;
+    }
+
+    .evolution-badge {
+      background: rgba(245, 158, 11, 0.15);
+      border: 1px solid var(--accent-amber);
+      color: var(--accent-amber);
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 4px;
+      animation: pulse-badge 1s infinite alternate;
+    }
+
+    @keyframes pulse-badge {
+      from { opacity: 0.7; }
+      to { opacity: 1; }
+    }
+
+    /* Master Layout */
+    .master-layout {
+      display: grid;
+      grid-template-columns: minmax(480px, 1fr) 520px;
+      gap: 12px;
+      padding: 12px 18px;
+      flex: 1;
+      height: calc(100vh - 86px);
+      box-sizing: border-box;
+      overflow: hidden;
+    }
+
+    .panel {
+      background: var(--surface-1);
+      border: 1px solid var(--border-subtle);
+      border-radius: 10px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      overflow: hidden;
+    }
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.76rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-secondary);
+      flex-shrink: 0;
+    }
+
+    /* Left Panel: Canvas + Modern Bottom Ribbon */
+    .canvas-panel {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .canvas-wrapper {
+      position: relative;
+      width: 100%;
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #050811;
+      border-radius: 8px;
+      border: 1px solid var(--border-subtle);
+      overflow: hidden;
+    }
+
+    #world-canvas {
+      max-width: 100%;
+      max-height: 100%;
+      aspect-ratio: 1 / 1;
+      image-rendering: pixelated;
+    }
+
+    /* Bottom Environmental Ribbon (Completely Redesigned) */
+    .bottom-ribbon {
+      background: var(--surface-2);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 8px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    .legend-row {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.72rem;
+      color: var(--text-secondary);
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .day-progress-bar-bg {
+      height: 4px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 2px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .day-progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #38bdf8, #facc15, #fb923c, #818cf8);
+      border-radius: 2px;
+      transition: width 0.2s;
+    }
+
+    /* Right Panel: High-Craft Neural & Operations Sidebar */
+    .sidebar-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      overflow-y: auto;
+    }
+
+    .sidebar-tabs {
+      display: flex;
+      gap: 4px;
+      background: var(--surface-2);
+      padding: 3px;
+      border-radius: 6px;
+      border: 1px solid var(--border-subtle);
+      flex-shrink: 0;
+    }
+
+    .sidebar-tab {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      padding: 5px 8px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .sidebar-tab.active {
+      background: var(--surface-hover);
+      color: #fff;
+      border: 1px solid var(--border-strong);
+    }
+
+    .card {
+      background: var(--surface-2);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.74rem;
+      font-weight: 700;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    /* Hero Selection Bar */
+    .hero-selector-bar {
+      display: flex;
+      gap: 4px;
+      overflow-x: auto;
+      padding-bottom: 2px;
+    }
+
+    .hero-chip {
+      background: var(--surface-3);
+      border: 1px solid var(--border-subtle);
+      padding: 2px 7px;
+      border-radius: 4px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .hero-chip.active {
+      border-color: var(--accent-cyan);
+      background: rgba(6, 182, 212, 0.15);
+      color: var(--accent-cyan);
+    }
+
+    .goal-badge {
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.68rem;
+      font-weight: 700;
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--accent-emerald);
+      border: 1px solid var(--accent-emerald);
+    }
+
+    /* Vitals Grid */
+    .vitals-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px 12px;
+    }
+
+    .vital-item {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .vital-header {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.7rem;
+      color: var(--text-secondary);
+    }
+
+    .bar-bg {
+      height: 5px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 0.15s;
+    }
+
+    .backpack-slots {
+      display: flex;
+      gap: 4px;
+    }
+
+    .backpack-slot {
+      width: 22px;
+      height: 22px;
+      border: 1px dashed var(--border-strong);
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      background: rgba(0, 0, 0, 0.25);
+    }
+
+    .backpack-slot.filled {
+      border: 1px solid var(--accent-emerald);
+      background: rgba(16, 185, 129, 0.15);
+    }
+
+    /* Real-Time Neural Core Visualizer (Completely Redesigned) */
+    .neural-board {
+      display: grid;
+      grid-template-columns: 1.1fr 1fr 1.1fr;
+      gap: 8px;
+      background: #090e1a;
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 8px;
+    }
+
+    .neural-col {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .col-title {
+      font-size: 0.65rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      border-bottom: 1px solid var(--border-subtle);
+      padding-bottom: 3px;
+      margin-bottom: 2px;
+    }
+
+    .sensor-row {
+      background: var(--surface-1);
+      border: 1px solid var(--border-subtle);
+      border-radius: 4px;
+      padding: 3px 6px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .sensor-header {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.66rem;
+      color: var(--text-secondary);
+    }
+
+    .sensor-val {
+      font-family: ui-monospace, monospace;
+      font-weight: 600;
+      color: var(--accent-cyan);
+    }
+
+    /* Bipolar Meter (shows negative to positive) */
+    .bipolar-bar {
+      height: 4px;
+      background: rgba(255, 255, 255, 0.06);
+      border-radius: 2px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .bipolar-fill {
+      position: absolute;
+      top: 0;
+      height: 100%;
+      background: var(--accent-cyan);
+      border-radius: 2px;
+    }
+
+    /* 4x4 Heatmap Matrix for 16 GRU Hidden Nodes */
+    .hidden-matrix {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 4px;
+    }
+
+    .matrix-cell {
+      aspect-ratio: 1 / 1;
+      border-radius: 4px;
+      border: 1px solid var(--border-subtle);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.62rem;
+      font-family: ui-monospace, monospace;
+      color: #fff;
+      transition: background 0.15s;
+    }
+
+    /* Action Output Cards */
+    .action-row {
+      background: var(--surface-1);
+      border: 1px solid var(--border-subtle);
+      border-radius: 4px;
+      padding: 4px 6px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .action-row.chosen {
+      border-color: var(--accent-emerald);
+      background: rgba(16, 185, 129, 0.15);
+    }
+
+    .action-header {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.68rem;
+      font-weight: 600;
+    }
+
+    .action-row.chosen .action-header {
+      color: var(--accent-emerald);
+      font-weight: 700;
+    }
+
+    /* Roster Table */
+    .roster-list {
+      max-height: 160px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .roster-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 4px 8px;
+      border-radius: 4px;
+      background: var(--surface-1);
+      border: 1px solid var(--border-subtle);
+      font-size: 0.72rem;
+      cursor: pointer;
+      transition: all 0.1s;
+    }
+
+    .roster-item:hover {
+      background: var(--surface-hover);
+    }
+
+    .roster-item.active {
+      border-color: var(--accent-cyan);
+      background: rgba(6, 182, 212, 0.12);
+    }
+
+    .event-feed {
+      max-height: 100px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      font-family: ui-monospace, monospace;
+      font-size: 0.68rem;
+      color: var(--text-secondary);
+    }
+
+    .stat-box {
+      background: var(--surface-1);
+      border: 1px solid var(--border-subtle);
+      border-radius: 6px;
+      padding: 6px;
+    }
+
+    .stat-box-val {
+      font-family: ui-monospace, monospace;
+      font-size: 1.05rem;
+      font-weight: 700;
+    }
+
+    .stat-box-lbl {
+      font-size: 0.65rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+  </style>
 </head>
 <body>
 
@@ -17,20 +657,18 @@
 
     <!-- Central Evolution & Simulation Controls -->
     <div class="controls-group">
-      <!-- On-Demand Evolution Trigger -->
       <div class="evolution-control">
-        <label for="evolve-gens-input" style="font-size: 0.78rem; color: var(--text-secondary); font-weight: 600;">Adapt:</label>
-        <input type="number" id="evolve-gens-input" min="1" max="100" value="10" style="width: 50px; text-align: center;">
+        <label for="evolve-gens-input" style="font-size: 0.74rem; color: var(--text-secondary); font-weight: 600;">Adapt:</label>
+        <input type="number" id="evolve-gens-input" min="1" max="100" value="10">
         <button id="btn-evolve" class="btn btn-evolve">🧬 Evolve</button>
       </div>
 
       <div class="divider-v"></div>
 
-      <!-- Playback Speed -->
       <div class="speed-control">
         <span>Speed:</span>
         <input type="range" id="speed-slider" min="1" max="40" value="6" step="1">
-        <span id="speed-label" style="font-family: monospace; min-width: 24px;">6x</span>
+        <span id="speed-label" style="font-family: monospace; min-width: 22px;">6x</span>
       </div>
 
       <button id="btn-play-pause" class="btn btn-primary">⏸ Pause</button>
@@ -51,7 +689,7 @@
         <span id="stat-gen" class="tag-val" style="color: #38bdf8;">1</span>
       </div>
       <div class="tag">
-        <span class="tag-label">Horizon:</span>
+        <span class="tag-label">Time:</span>
         <span id="stat-time" class="tag-val">Day 1.0 · Morning 🌅</span>
       </div>
       <div class="tag">
@@ -68,117 +706,123 @@
     </div>
   </div>
 
-  <!-- Master Split Layout -->
+  <!-- Master 2-Column Split Layout -->
   <main class="master-layout">
     
-    <!-- Left: Civilization World Canvas -->
+    <!-- Left: World Canvas + Redesigned Bottom Ribbon -->
     <div class="panel canvas-panel">
       <div class="panel-header">
         <span>The Living World (14x14 Grid)</span>
-        <span style="font-size: 0.72rem; color: var(--text-muted);">Moving Hazards Active ⚠️</span>
+        <span style="font-size: 0.7rem; color: #f87171;">Dynamic Moving Hazards Active ⚠️</span>
       </div>
 
       <div class="canvas-wrapper">
         <canvas id="world-canvas" width="600" height="600"></canvas>
       </div>
 
-      <!-- Legend -->
-      <div class="legend-bar">
-        <div class="legend-item"><span>⛺</span> <span>Home Base</span></div>
-        <div class="legend-item"><span>💧</span> <span>Water Lake</span></div>
-        <div class="legend-item"><span>🍏</span> <span>Ripe Bush</span></div>
-        <div class="legend-item"><span>🌱</span> <span>Barren Bush</span></div>
-        <div class="legend-item"><span>🌲</span> <span>Timber Tree</span></div>
-        <div class="legend-item"><span>🪵</span> <span>Tree Stump</span></div>
-        <div class="legend-item"><span>⚠️</span> <span>Moving Hazard</span></div>
-        <div class="legend-item"><span>🧙</span> <span>Villager</span></div>
+      <!-- Completely Redesigned Bottom Ribbon -->
+      <div class="bottom-ribbon">
+        <div class="legend-row">
+          <div class="legend-item"><span>⛺</span> <span>Home Base</span></div>
+          <div class="legend-item"><span>💧</span> <span>Water Lake</span></div>
+          <div class="legend-item"><span>🍏</span> <span>Ripe Bush</span></div>
+          <div class="legend-item"><span>🌱</span> <span>Cooldown</span></div>
+          <div class="legend-item"><span>🌲</span> <span>Timber</span></div>
+          <div class="legend-item"><span>🪵</span> <span>Stump</span></div>
+          <div class="legend-item"><span>⚠️</span> <span>Moving Hazard</span></div>
+          <div class="legend-item"><span>🧙</span> <span>Villager</span></div>
+        </div>
+        <div class="day-progress-bar-bg">
+          <div id="day-cycle-fill" class="day-progress-bar-fill" style="width: 25%;"></div>
+        </div>
       </div>
     </div>
 
-    <!-- Right: Real-time Neural Brain & Colony Dashboard -->
+    <!-- Right: Completely Redesigned Neural Brain & Operations Sidebar -->
     <div class="panel sidebar-panel">
       
-      <!-- Tab Navigation -->
-      <div class="sidebar-tabs">
-        <button class="sidebar-tab active" data-tab="brain">🧠 Neural Brain</button>
-        <button class="sidebar-tab" data-tab="colony">🏕️ Colony & Roster</button>
+      <!-- Quick Hero Selector Bar -->
+      <div class="card" style="padding: 8px 10px;">
+        <div class="card-header">
+          <span>Active Villagers (Select to Inspect)</span>
+          <span id="lineage-tag" style="color: var(--accent-cyan); font-size: 0.68rem;">Lineage: Hero_01</span>
+        </div>
+        <div class="hero-selector-bar" id="hero-selector-bar">
+          <!-- Populated by JS -->
+        </div>
       </div>
 
-      <!-- TAB 1: Neural Brain Viewer -->
-      <div id="tab-brain-content" class="tab-content active">
-        
-        <!-- Active Hero Vitals -->
-        <div class="card">
-          <div class="card-header">
-            <span id="hero-name-label">Hero #01 Vitals</span>
-            <span id="hero-goal-badge" class="goal-badge">FORAGING</span>
-          </div>
+      <!-- Hero Vitals & Backpack Card -->
+      <div class="card">
+        <div class="card-header">
+          <span id="hero-name-label">Hero #1 Biological Homeostasis</span>
+          <span id="hero-goal-badge" class="goal-badge">FORAGING</span>
+        </div>
 
-          <div class="vitals-grid">
-            <div class="vital-item">
-              <div class="vital-header"><span>Health</span><span id="val-health">100%</span></div>
-              <div class="bar-bg"><div id="bar-health" class="bar-fill" style="width: 100%; background: var(--accent-emerald);"></div></div>
-            </div>
-            <div class="vital-item">
-              <div class="vital-header"><span>Energy</span><span id="val-energy">100%</span></div>
-              <div class="bar-bg"><div id="bar-energy" class="bar-fill" style="width: 100%; background: var(--accent-cyan);"></div></div>
-            </div>
-            <div class="vital-item">
-              <div class="vital-header"><span>Hunger</span><span id="val-hunger">0%</span></div>
-              <div class="bar-bg"><div id="bar-hunger" class="bar-fill" style="width: 0%; background: var(--accent-amber);"></div></div>
-            </div>
-            <div class="vital-item">
-              <div class="vital-header"><span>Thirst</span><span id="val-thirst">0%</span></div>
-              <div class="bar-bg"><div id="bar-thirst" class="bar-fill" style="width: 0%; background: var(--accent-cyan);"></div></div>
-            </div>
+        <div class="vitals-grid">
+          <div class="vital-item">
+            <div class="vital-header"><span>Health</span><span id="val-health">100%</span></div>
+            <div class="bar-bg"><div id="bar-health" class="bar-fill" style="width: 100%; background: var(--accent-emerald);"></div></div>
           </div>
-
-          <!-- Backpack -->
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px; font-size: 0.78rem;">
-            <span style="color: var(--text-secondary);">Backpack Inventory:</span>
-            <div id="backpack-slots-container" class="backpack-slots"></div>
+          <div class="vital-item">
+            <div class="vital-header"><span>Energy</span><span id="val-energy">100%</span></div>
+            <div class="bar-bg"><div id="bar-energy" class="bar-fill" style="width: 100%; background: var(--accent-cyan);"></div></div>
+          </div>
+          <div class="vital-item">
+            <div class="vital-header"><span>Hunger</span><span id="val-hunger">0%</span></div>
+            <div class="bar-bg"><div id="bar-hunger" class="bar-fill" style="width: 0%; background: var(--accent-amber);"></div></div>
+          </div>
+          <div class="vital-item">
+            <div class="vital-header"><span>Thirst</span><span id="val-thirst">0%</span></div>
+            <div class="bar-bg"><div id="bar-thirst" class="bar-fill" style="width: 0%; background: var(--accent-cyan);"></div></div>
           </div>
         </div>
 
-        <!-- Real-Time Neural Architecture Visualizer -->
-        <div class="card" style="flex: 1; display: flex; flex-direction: column;">
-          <div class="card-header">
-            <span>Neural Core (GRU Recurrent Network)</span>
-            <span style="font-size: 0.7rem; color: var(--accent-cyan);" id="lineage-tag">Lineage: Hero_01</span>
-          </div>
-
-          <div class="network-container">
-            <!-- SENSORY LAYER (6 Nodes) -->
-            <div class="network-col">
-              <div class="col-title">Sensory Inputs (6D)</div>
-              <div class="node-list" id="nodes-sensor"></div>
-            </div>
-
-            <!-- HIDDEN LAYER (16 Nodes) -->
-            <div class="network-col">
-              <div class="col-title">GRU Hidden State (16D)</div>
-              <div class="node-list node-grid-2col" id="nodes-hidden"></div>
-            </div>
-
-            <!-- MOTOR ACTIONS (4 Nodes) -->
-            <div class="network-col">
-              <div class="col-title">Motor Actions (4D)</div>
-              <div class="node-list" id="nodes-action"></div>
-            </div>
-          </div>
+        <!-- Backpack -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 2px; font-size: 0.72rem;">
+          <span style="color: var(--text-secondary);">Backpack Inventory:</span>
+          <div id="backpack-slots-container" class="backpack-slots"></div>
         </div>
-
       </div>
 
-      <!-- TAB 2: Colony & Roster -->
-      <div id="tab-colony-content" class="tab-content">
-        
-        <!-- Granary & Colony Stats -->
-        <div class="card">
-          <div class="card-header">
-            <span>Central Granary & Reserves</span>
+      <!-- Completely Redesigned Real-Time Neural Core -->
+      <div class="card" style="flex: 1;">
+        <div class="card-header">
+          <span>Recurrent GRU Brain Architecture</span>
+          <span style="font-size: 0.68rem; color: var(--accent-emerald);">6D Input → 16D State → 4D Motor</span>
+        </div>
+
+        <div class="neural-board">
+          <!-- Sensory Inputs (6D) -->
+          <div class="neural-col">
+            <div class="col-title">Sensory Inputs (6D)</div>
+            <div id="nodes-sensor" style="display:flex; flex-direction:column; gap:3px;"></div>
           </div>
-          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; text-align: center;">
+
+          <!-- GRU Hidden State 4x4 Heatmap (16D) -->
+          <div class="neural-col">
+            <div class="col-title">GRU State (16D)</div>
+            <div id="matrix-hidden" class="hidden-matrix"></div>
+          </div>
+
+          <!-- Motor Actions (4D) -->
+          <div class="neural-col">
+            <div class="col-title">Motor Actions (4D)</div>
+            <div id="nodes-action" style="display:flex; flex-direction:column; gap:4px;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom Card: Colony Depot & Event Chronology Tabs -->
+      <div class="card">
+        <div class="sidebar-tabs" style="margin-bottom: 6px;">
+          <button class="sidebar-tab active" data-tab="colony">🏕️ Colony Stockpile</button>
+          <button class="sidebar-tab" data-tab="events">📜 Event Chronology</button>
+        </div>
+
+        <!-- Tab 1: Colony Stockpile & Roster -->
+        <div id="tab-colony-content" style="display: flex; flex-direction: column; gap: 8px;">
+          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; text-align: center;">
             <div class="stat-box">
               <div class="stat-box-val" id="colony-food" style="color: #4ade80;">0</div>
               <div class="stat-box-lbl">Food Stockpile 🍏</div>
@@ -192,24 +836,14 @@
               <div class="stat-box-lbl">Emergency Meals 🍲</div>
             </div>
           </div>
-        </div>
 
-        <!-- Villager Roster -->
-        <div class="card" style="flex: 1; display: flex; flex-direction: column;">
-          <div class="card-header">
-            <span>Population Roster (Click to Inspect Brain)</span>
-          </div>
           <div class="roster-list" id="roster-container"></div>
         </div>
 
-        <!-- Village Event Feed -->
-        <div class="card">
-          <div class="card-header">
-            <span>Village Chronology</span>
-          </div>
+        <!-- Tab 2: Event Chronology -->
+        <div id="tab-events-content" style="display: none;">
           <div class="event-feed" id="event-feed"></div>
         </div>
-
       </div>
 
     </div>

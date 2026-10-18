@@ -275,9 +275,12 @@ async def civilization_persistent_loop():
     global is_paused, tick_speed
     while True:
         if not is_paused:
-            step_civilization()
-            if len(manager.active_connections) > 0:
-                await manager.broadcast(json.dumps(get_world_state()))
+            try:
+                step_civilization()
+                if len(manager.active_connections) > 0:
+                    await manager.broadcast(json.dumps(get_world_state()))
+            except Exception as e:
+                print(f"Civilization step error: {e}", flush=True)
         delay = 1.0 / max(1.0, min(tick_speed, 40.0))
         await asyncio.sleep(delay)
 

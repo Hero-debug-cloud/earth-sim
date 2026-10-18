@@ -13,8 +13,11 @@ function connectWS() {
   ws = new WebSocket(`${protocol}//${window.location.host}/ws`);
 
   ws.onopen = () => {
-    document.getElementById("connection-status").textContent = "Live Connected";
-    document.getElementById("connection-status").style.color = "var(--accent-emerald)";
+    const statusEl = document.getElementById("connection-status");
+    if (statusEl) {
+      statusEl.textContent = "Live Connected";
+      statusEl.style.color = "var(--accent-emerald)";
+    }
   };
 
   ws.onmessage = (event) => {
@@ -30,55 +33,83 @@ function connectWS() {
   };
 
   ws.onclose = () => {
-    document.getElementById("connection-status").textContent = "Reconnecting...";
-    document.getElementById("connection-status").style.color = "var(--accent-rose)";
+    const statusEl = document.getElementById("connection-status");
+    if (statusEl) {
+      statusEl.textContent = "Reconnecting...";
+      statusEl.style.color = "var(--accent-rose)";
+    }
     setTimeout(connectWS, 1500);
   };
 }
 
 // Evolution & Controls Wiring
-document.getElementById("btn-evolve").addEventListener("click", () => {
-  const inputEl = document.getElementById("evolve-gens-input");
-  const gens = parseInt(inputEl.value) || 10;
-  if (ws && ws.readyState === WebSocket.OPEN) {
-    ws.send(JSON.stringify({ action: "evolve_generations", generations: gens }));
-  }
-});
+const btnEvolve = document.getElementById("btn-evolve");
+if (btnEvolve) {
+  btnEvolve.addEventListener("click", () => {
+    const inputEl = document.getElementById("evolve-gens-input");
+    const gens = parseInt(inputEl.value) || 10;
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({ action: "evolve_generations", generations: gens }));
+    }
+  });
+}
 
-document.getElementById("btn-play-pause").addEventListener("click", () => {
-  if (ws && ws.readyState === WebSocket.OPEN) {
-    ws.send(JSON.stringify({ action: "toggle_pause" }));
-  }
-});
+const btnPlayPause = document.getElementById("btn-play-pause");
+if (btnPlayPause) {
+  btnPlayPause.addEventListener("click", () => {
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({ action: "toggle_pause" }));
+    }
+  });
+}
 
-document.getElementById("btn-step").addEventListener("click", () => {
-  if (ws && ws.readyState === WebSocket.OPEN) {
-    ws.send(JSON.stringify({ action: "step_once" }));
-  }
-});
+const btnStep = document.getElementById("btn-step");
+if (btnStep) {
+  btnStep.addEventListener("click", () => {
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({ action: "step_once" }));
+    }
+  });
+}
 
-document.getElementById("btn-reset").addEventListener("click", () => {
-  if (ws && ws.readyState === WebSocket.OPEN) {
-    ws.send(JSON.stringify({ action: "reset" }));
-  }
-});
+const btnReset = document.getElementById("btn-reset");
+if (btnReset) {
+  btnReset.addEventListener("click", () => {
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({ action: "reset" }));
+    }
+  });
+}
 
 const speedSlider = document.getElementById("speed-slider");
-speedSlider.addEventListener("input", (e) => {
-  const spd = parseFloat(e.target.value);
-  document.getElementById("speed-label").textContent = `${spd}x`;
-  if (ws && ws.readyState === WebSocket.OPEN) {
-    ws.send(JSON.stringify({ action: "set_speed", speed: spd }));
-  }
-});
+if (speedSlider) {
+  speedSlider.addEventListener("input", (e) => {
+    const spd = parseFloat(e.target.value);
+    const lbl = document.getElementById("speed-label");
+    if (lbl) lbl.textContent = `${spd}x`;
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({ action: "set_speed", speed: spd }));
+    }
+  });
+}
 
 // Sidebar Tab Switching
 document.querySelectorAll(".sidebar-tab").forEach((tab) => {
   tab.addEventListener("click", () => {
     document.querySelectorAll(".sidebar-tab").forEach((t) => t.classList.remove("active"));
-    document.querySelectorAll(".tab-content").forEach((c) => c.classList.remove("active"));
     tab.classList.add("active");
-    document.getElementById(`tab-${tab.dataset.tab}-content`).classList.add("active");
+    const target = tab.dataset.tab;
+    const colonyContent = document.getElementById("tab-colony-content");
+    const eventsContent = document.getElementById("tab-events-content");
+    if (colonyContent && eventsContent) {
+      if (target === "colony") {
+        colonyContent.style.display = "flex";
+        eventsContent.style.display = "none";
+      } else {
+        colonyContent.style.display = "none";
+        eventsContent.style.display = "block";
+      }
+    }
   });
 });
 
@@ -102,155 +133,282 @@ canvas.addEventListener("click", (e) => {
     if (ws && ws.readyState === WebSocket.OPEN) {
       ws.send(JSON.stringify({ action: "select_hero", id: hero.id }));
     }
+    updateUI(currentState);
   }
 });
 
 function updateUI(data) {
+  if (!data) return;
+
   // Status Bar
-  document.getElementById("stat-gen").textContent = data.generation;
-  document.getElementById("stat-time").textContent = `Day ${data.day_num} · ${data.tod_name}`;
-  document.getElementById("stat-granary").textContent = `🍏 ${data.stockpile.food} | 🪵 ${data.stockpile.wood}`;
-  document.getElementById("stat-inspecting").textContent = `Hero #${selectedHeroId}`;
+  const statGen = document.getElementById("stat-gen");
+  if (statGen) statGen.textContent = data.generation;
+
+  const statTime = document.getElementById("stat-time");
+  if (statTime) statTime.textContent = `Day ${data.day_num} · ${data.tod_name}`;
+
+  const statGranary = document.getElementById("stat-granary");
+  if (statGranary) statGranary.textContent = `🍏 ${data.stockpile.food} | 🪵 ${data.stockpile.wood}`;
+
+  const statInspecting = document.getElementById("stat-inspecting");
+  if (statInspecting) statInspecting.textContent = `Hero #${selectedHeroId}`;
 
   // Evolution Indicator
   const evoBadge = document.getElementById("evolution-indicator");
-  const btnEvolve = document.getElementById("btn-evolve");
-  if (data.is_evolving) {
-    evoBadge.style.display = "block";
-    btnEvolve.disabled = true;
-    btnEvolve.textContent = "Adapting...";
-  } else {
-    evoBadge.style.display = "none";
-    btnEvolve.disabled = false;
-    btnEvolve.textContent = "🧬 Evolve";
-  }
-
-  // Play/Pause button
-  document.getElementById("btn-play-pause").textContent = data.is_paused ? "▶ Play" : "⏸ Pause";
-
-  // Selected Hero Vitals
-  const inspectedHero = data.heroes.find((h) => h.id === selectedHeroId) || data.heroes[0];
-  if (inspectedHero) {
-    document.getElementById("hero-name-label").textContent = `Hero #${inspectedHero.id} Vitals`;
-    const goalBadge = document.getElementById("hero-goal-badge");
-    goalBadge.textContent = inspectedHero.goal;
-
-    const v = inspectedHero.vitals;
-    document.getElementById("val-health").textContent = `${Math.round(v.health)}%`;
-    document.getElementById("bar-health").style.width = `${v.health}%`;
-    document.getElementById("bar-health").style.background = v.health > 40 ? "var(--accent-emerald)" : "var(--accent-rose)";
-
-    document.getElementById("val-energy").textContent = `${Math.round(v.energy)}%`;
-    document.getElementById("bar-energy").style.width = `${v.energy}%`;
-
-    document.getElementById("val-hunger").textContent = `${Math.round(v.hunger)}%`;
-    document.getElementById("bar-hunger").style.width = `${v.hunger}%`;
-    document.getElementById("bar-hunger").style.background = v.hunger >= 70 ? "var(--accent-rose)" : "var(--accent-amber)";
-
-    document.getElementById("val-thirst").textContent = `${Math.round(v.thirst)}%`;
-    document.getElementById("bar-thirst").style.width = `${v.thirst}%`;
-    document.getElementById("bar-thirst").style.background = v.thirst >= 70 ? "var(--accent-rose)" : "var(--accent-cyan)";
-
-    // Backpack
-    const bp = inspectedHero.backpack;
-    const bpEl = document.getElementById("backpack-slots-container");
-    bpEl.innerHTML = "";
-    for (let i = 0; i < 5; i++) {
-      const slot = document.createElement("div");
-      slot.className = "backpack-slot";
-      if (i < bp.food) {
-        slot.classList.add("filled");
-        slot.textContent = "🍏";
-      } else if (i < bp.food + bp.wood) {
-        slot.classList.add("filled");
-        slot.textContent = "🪵";
-      } else {
-        slot.textContent = "░";
-      }
-      bpEl.appendChild(slot);
+  const evolveBtn = document.getElementById("btn-evolve");
+  if (evoBadge && evolveBtn) {
+    if (data.is_evolving) {
+      evoBadge.style.display = "block";
+      evolveBtn.disabled = true;
+      evolveBtn.textContent = "Adapting...";
+    } else {
+      evoBadge.style.display = "none";
+      evolveBtn.disabled = false;
+      evolveBtn.textContent = "🧬 Evolve";
     }
   }
 
-  // Real-Time Neural Brain Viewer
-  if (data.brain) {
-    const b = data.brain;
-    document.getElementById("lineage-tag").textContent = b.lineage;
+  // Play/Pause button
+  const playPauseBtn = document.getElementById("btn-play-pause");
+  if (playPauseBtn) {
+    playPauseBtn.textContent = data.is_paused ? "▶ Play" : "⏸ Pause";
+  }
 
-    // Sensors
-    const sensorContainer = document.getElementById("nodes-sensor");
-    sensorContainer.innerHTML = "";
-    b.sensors.forEach((s) => {
-      const node = document.createElement("div");
-      node.className = "neural-node";
-      node.innerHTML = `
-        <div class="neural-node-row"><span>${s.name}</span><span class="neural-node-val">${s.val}</span></div>
-        <div class="bar-bg"><div class="bar-fill" style="width:${Math.abs(s.val) * 100}%; background:var(--accent-cyan);"></div></div>
-      `;
-      sensorContainer.appendChild(node);
-    });
+  // Day Cycle Meter in Bottom Ribbon
+  const dayCycleFill = document.getElementById("day-cycle-fill");
+  if (dayCycleFill) {
+    const cycleProgress = data.tick % 100;
+    dayCycleFill.style.width = `${cycleProgress}%`;
+  }
 
-    // Hidden GRU State
-    const hiddenContainer = document.getElementById("nodes-hidden");
-    hiddenContainer.innerHTML = "";
-    b.hidden.forEach((h) => {
-      const norm = (h.val + 1.0) / 2.0; // [-1, 1] to [0, 1]
-      const node = document.createElement("div");
-      node.className = "neural-node";
-      node.innerHTML = `
-        <div class="neural-node-row"><span>${h.name}</span><span class="neural-node-val">${h.val}</span></div>
-        <div class="bar-bg"><div class="bar-fill" style="width:${norm * 100}%; background:var(--accent-purple);"></div></div>
-      `;
-      hiddenContainer.appendChild(node);
-    });
-
-    // Motor Actions
-    const actionContainer = document.getElementById("nodes-action");
-    actionContainer.innerHTML = "";
-    b.actions.forEach((a) => {
-      const node = document.createElement("div");
-      node.className = `neural-node ${a.chosen ? "chosen" : ""}`;
-      node.innerHTML = `
-        <div class="neural-node-row"><span>${a.name}</span><span class="neural-node-val">${Math.round(a.val * 100)}%</span></div>
-        <div class="bar-bg"><div class="bar-fill" style="width:${a.val * 100}%; background:${a.chosen ? "var(--accent-emerald)" : "var(--accent-cyan)"};"></div></div>
-      `;
-      actionContainer.appendChild(node);
+  // Quick Hero Selector Bar (Top of right sidebar)
+  const selectorBar = document.getElementById("hero-selector-bar");
+  if (selectorBar && data.heroes) {
+    selectorBar.innerHTML = "";
+    data.heroes.forEach((h) => {
+      const chip = document.createElement("button");
+      chip.className = `hero-chip ${h.id === selectedHeroId ? "active" : ""}`;
+      chip.textContent = `Hero #${h.id}`;
+      chip.addEventListener("click", () => {
+        selectedHeroId = h.id;
+        if (ws && ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify({ action: "select_hero", id: h.id }));
+        }
+        updateUI(currentState);
+      });
+      selectorBar.appendChild(chip);
     });
   }
 
-  // Colony Stats
-  document.getElementById("colony-food").textContent = data.stockpile.food;
-  document.getElementById("colony-wood").textContent = data.stockpile.wood;
-  document.getElementById("colony-rations").textContent = data.emergency_rations;
+  // Selected Hero Vitals & Biological Homeostasis
+  const inspectedHero = data.heroes.find((h) => h.id === selectedHeroId) || data.heroes[0];
+  if (inspectedHero) {
+    const nameLabel = document.getElementById("hero-name-label");
+    if (nameLabel) nameLabel.textContent = `Hero #${inspectedHero.id} Biological Homeostasis`;
 
-  // Roster
-  const rosterContainer = document.getElementById("roster-container");
-  rosterContainer.innerHTML = "";
-  data.heroes.forEach((h) => {
-    const item = document.createElement("div");
-    item.className = `roster-item ${h.id === selectedHeroId ? "active" : ""}`;
-    const pack = "🍏".repeat(h.backpack.food) + "🪵".repeat(h.backpack.wood) || "empty";
-    item.innerHTML = `
-      <span><b>Hero #${h.id}</b> · ${Math.round(h.vitals.health)}% HP</span>
-      <span style="color:var(--text-secondary); font-size:0.7rem;">Pack: ${pack} · <i>${h.goal}</i></span>
-    `;
-    item.addEventListener("click", () => {
-      selectedHeroId = h.id;
-      if (ws && ws.readyState === WebSocket.OPEN) {
-        ws.send(JSON.stringify({ action: "select_hero", id: h.id }));
+    const goalBadge = document.getElementById("hero-goal-badge");
+    if (goalBadge) {
+      goalBadge.textContent = inspectedHero.goal;
+      if (inspectedHero.goal === "REST") {
+        goalBadge.style.borderColor = "var(--accent-cyan)";
+        goalBadge.style.color = "var(--accent-cyan)";
+        goalBadge.style.background = "rgba(6, 182, 212, 0.15)";
+      } else if (inspectedHero.goal === "HYDRATE") {
+        goalBadge.style.borderColor = "#38bdf8";
+        goalBadge.style.color = "#38bdf8";
+        goalBadge.style.background = "rgba(56, 189, 248, 0.15)";
+      } else {
+        goalBadge.style.borderColor = "var(--accent-emerald)";
+        goalBadge.style.color = "var(--accent-emerald)";
+        goalBadge.style.background = "rgba(16, 185, 129, 0.15)";
       }
-    });
-    rosterContainer.appendChild(item);
-  });
+    }
 
-  // Event Feed
+    const v = inspectedHero.vitals;
+    const valHealth = document.getElementById("val-health");
+    const barHealth = document.getElementById("bar-health");
+    if (valHealth && barHealth) {
+      valHealth.textContent = `${Math.round(v.health)}%`;
+      barHealth.style.width = `${v.health}%`;
+      barHealth.style.background = v.health > 40 ? "var(--accent-emerald)" : "var(--accent-rose)";
+    }
+
+    const valEnergy = document.getElementById("val-energy");
+    const barEnergy = document.getElementById("bar-energy");
+    if (valEnergy && barEnergy) {
+      valEnergy.textContent = `${Math.round(v.energy)}%`;
+      barEnergy.style.width = `${v.energy}%`;
+    }
+
+    const valHunger = document.getElementById("val-hunger");
+    const barHunger = document.getElementById("bar-hunger");
+    if (valHunger && barHunger) {
+      valHunger.textContent = `${Math.round(v.hunger)}%`;
+      barHunger.style.width = `${v.hunger}%`;
+      barHunger.style.background = v.hunger >= 70 ? "var(--accent-rose)" : "var(--accent-amber)";
+    }
+
+    const valThirst = document.getElementById("val-thirst");
+    const barThirst = document.getElementById("bar-thirst");
+    if (valThirst && barThirst) {
+      valThirst.textContent = `${Math.round(v.thirst)}%`;
+      barThirst.style.width = `${v.thirst}%`;
+      barThirst.style.background = v.thirst >= 70 ? "var(--accent-rose)" : "var(--accent-cyan)";
+    }
+
+    // 5-Slot Backpack
+    const bp = inspectedHero.backpack;
+    const bpEl = document.getElementById("backpack-slots-container");
+    if (bpEl) {
+      bpEl.innerHTML = "";
+      for (let i = 0; i < 5; i++) {
+        const slot = document.createElement("div");
+        slot.className = "backpack-slot";
+        if (i < bp.food) {
+          slot.classList.add("filled");
+          slot.textContent = "🍏";
+        } else if (i < bp.food + bp.wood) {
+          slot.classList.add("filled");
+          slot.textContent = "🪵";
+        } else {
+          slot.textContent = "";
+        }
+        bpEl.appendChild(slot);
+      }
+    }
+  }
+
+  // Real-Time Neural Core Viewer
+  if (data.brain) {
+    const b = data.brain;
+    const lineageEl = document.getElementById("lineage-tag");
+    if (lineageEl) lineageEl.textContent = `Lineage: ${b.lineage}`;
+
+    // 1. Sensory Inputs (6D) with centered bipolar meters
+    const sensorContainer = document.getElementById("nodes-sensor");
+    if (sensorContainer) {
+      sensorContainer.innerHTML = "";
+      b.sensors.forEach((s) => {
+        const row = document.createElement("div");
+        row.className = "sensor-row";
+        const val = s.val;
+        let fillLeft = 50;
+        let fillWidth = 0;
+        let fillColor = "var(--accent-cyan)";
+        if (val < 0) {
+          fillWidth = Math.min(50, Math.abs(val) * 50);
+          fillLeft = 50 - fillWidth;
+          fillColor = "var(--accent-rose)";
+        } else {
+          fillWidth = Math.min(50, val * 50);
+          fillLeft = 50;
+          fillColor = "var(--accent-cyan)";
+        }
+
+        row.innerHTML = `
+          <div class="sensor-header">
+            <span>${s.name}</span>
+            <span class="sensor-val" style="color: ${fillColor}">${val >= 0 ? "+" : ""}${val.toFixed(2)}</span>
+          </div>
+          <div class="bipolar-bar">
+            <div class="bipolar-fill" style="left: ${fillLeft}%; width: ${fillWidth}%; background: ${fillColor};"></div>
+          </div>
+        `;
+        sensorContainer.appendChild(row);
+      });
+    }
+
+    // 2. 16D GRU Hidden State 4x4 Heatmap Matrix
+    const matrixContainer = document.getElementById("matrix-hidden");
+    if (matrixContainer) {
+      matrixContainer.innerHTML = "";
+      b.hidden.forEach((h, idx) => {
+        const val = h.val;
+        const absVal = Math.min(1.0, Math.abs(val));
+        const alpha = Math.max(0.12, absVal * 0.85);
+        const bg = val >= 0
+          ? `rgba(168, 85, 247, ${alpha.toFixed(2)})`
+          : `rgba(239, 68, 68, ${alpha.toFixed(2)})`;
+        const border = val >= 0
+          ? `rgba(168, 85, 247, ${Math.min(1.0, alpha + 0.3)})`
+          : `rgba(239, 68, 68, ${Math.min(1.0, alpha + 0.3)})`;
+
+        const cell = document.createElement("div");
+        cell.className = "matrix-cell";
+        cell.style.background = bg;
+        cell.style.borderColor = border;
+        cell.title = `GRU Dimension #${idx}: ${val.toFixed(3)}`;
+        cell.innerHTML = `
+          <span style="font-size:0.58rem; opacity:0.65;">h${idx}</span>
+          <span style="font-weight:700; font-size:0.68rem;">${val >= 0 ? "+" : ""}${val.toFixed(1)}</span>
+        `;
+        matrixContainer.appendChild(cell);
+      });
+    }
+
+    // 3. Motor Actions (4D) with bright emerald highlight on chosen action
+    const actionContainer = document.getElementById("nodes-action");
+    if (actionContainer) {
+      actionContainer.innerHTML = "";
+      b.actions.forEach((a) => {
+        const row = document.createElement("div");
+        row.className = `action-row ${a.chosen ? "chosen" : ""}`;
+        row.innerHTML = `
+          <div class="action-header">
+            <span>${a.name}</span>
+            <span>${Math.round(a.val * 100)}%</span>
+          </div>
+          <div class="bar-bg">
+            <div class="bar-fill" style="width:${a.val * 100}%; background:${a.chosen ? "var(--accent-emerald)" : "var(--accent-cyan)"};"></div>
+          </div>
+        `;
+        actionContainer.appendChild(row);
+      });
+    }
+  }
+
+  // Colony Depot Stats
+  const cf = document.getElementById("colony-food");
+  if (cf) cf.textContent = data.stockpile.food;
+  const cw = document.getElementById("colony-wood");
+  if (cw) cw.textContent = data.stockpile.wood;
+  const cr = document.getElementById("colony-rations");
+  if (cr) cr.textContent = data.emergency_rations;
+
+  // Roster in Colony tab
+  const rosterContainer = document.getElementById("roster-container");
+  if (rosterContainer) {
+    rosterContainer.innerHTML = "";
+    data.heroes.forEach((h) => {
+      const item = document.createElement("div");
+      item.className = `roster-item ${h.id === selectedHeroId ? "active" : ""}`;
+      const pack = "🍏".repeat(h.backpack.food) + "🪵".repeat(h.backpack.wood) || "empty";
+      item.innerHTML = `
+        <span><b>Hero #${h.id}</b> · ${Math.round(h.vitals.health)}% HP</span>
+        <span style="color:var(--text-secondary); font-size:0.7rem;">Pack: ${pack} · <i>${h.goal}</i></span>
+      `;
+      item.addEventListener("click", () => {
+        selectedHeroId = h.id;
+        if (ws && ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify({ action: "select_hero", id: h.id }));
+        }
+        updateUI(currentState);
+      });
+      rosterContainer.appendChild(item);
+    });
+  }
+
+  // Event Chronology
   if (data.events && data.events.length > 0) {
     const feed = document.getElementById("event-feed");
-    feed.innerHTML = "";
-    data.events.slice().reverse().forEach((ev) => {
-      const line = document.createElement("div");
-      line.textContent = `[T${data.tick}] ${ev}`;
-      feed.appendChild(line);
-    });
+    if (feed) {
+      feed.innerHTML = "";
+      data.events.slice().reverse().forEach((ev) => {
+        const line = document.createElement("div");
+        line.textContent = `[T${data.tick}] ${ev}`;
+        feed.appendChild(line);
+      });
+    }
   }
 }
 
@@ -312,7 +470,7 @@ function render() {
         ctx.fillText("💧", x + cellSize * 0.5, y + cellSize * 0.5);
       }
 
-      // Bushes
+      // Berry Bushes
       const bush = currentState.bushes.find((b) => b.pos[0] === r && b.pos[1] === c);
       if (bush) {
         if (bush.is_ripe) {
@@ -335,7 +493,7 @@ function render() {
         }
       }
 
-      // Trees
+      // Timber Trees
       const tree = currentState.trees.find((t) => t.pos[0] === r && t.pos[1] === c);
       if (tree) {
         if (tree.is_mature) {
