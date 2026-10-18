@@ -43,6 +43,20 @@ function connectWS() {
   };
 }
 
+// Auto-adapting input width for large/small numbers
+const evolveGensInput = document.getElementById("evolve-gens-input");
+if (evolveGensInput) {
+  function adaptInputWidth() {
+    const val = evolveGensInput.value || "10";
+    const len = Math.max(2, val.toString().length);
+    evolveGensInput.style.width = `calc(${len}ch + 28px)`;
+  }
+  evolveGensInput.addEventListener("input", adaptInputWidth);
+  evolveGensInput.addEventListener("change", adaptInputWidth);
+  evolveGensInput.addEventListener("keyup", adaptInputWidth);
+  adaptInputWidth();
+}
+
 // Evolution & Controls Wiring
 const btnEvolve = document.getElementById("btn-evolve");
 if (btnEvolve) {

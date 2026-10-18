@@ -100,11 +100,13 @@
       font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
       font-size: 0.8rem;
       font-weight: 600;
-      width: 68px;
-      min-width: 68px;
+      width: auto;
+      min-width: 46px;
+      max-width: 120px;
+      field-sizing: content; /* Modern CSS auto-adapting input width */
       text-align: center;
       outline: none;
-      transition: border-color 0.15s, box-shadow 0.15s;
+      transition: border-color 0.15s, box-shadow 0.15s, width 0.12s ease-out;
     }
 
     .evolution-control input:focus {
