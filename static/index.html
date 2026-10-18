@@ -95,13 +95,21 @@
       background: #090e18;
       border: 1px solid var(--border-strong);
       color: #fff;
-      border-radius: 3px;
-      padding: 2px 4px;
-      font-family: ui-monospace, monospace;
-      font-size: 0.75rem;
-      width: 40px;
+      border-radius: 4px;
+      padding: 3px 6px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.8rem;
+      font-weight: 600;
+      width: 68px;
+      min-width: 68px;
       text-align: center;
       outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+
+    .evolution-control input:focus {
+      border-color: var(--accent-cyan);
+      box-shadow: 0 0 0 1px rgba(6, 182, 212, 0.4);
     }
 
     .btn {
@@ -806,7 +814,7 @@
     <div class="controls-group">
       <div class="evolution-control">
         <label for="evolve-gens-input" style="font-size: 0.7rem; color: var(--text-secondary); font-weight: 600;">Adapt:</label>
-        <input type="number" id="evolve-gens-input" min="1" max="100" value="10">
+        <input type="number" id="evolve-gens-input" min="1" max="5000" value="10" placeholder="10">
         <button id="btn-evolve" class="btn btn-evolve">🧬 Evolve</button>
       </div>
 

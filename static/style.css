@@ -88,13 +88,21 @@
       background: #090e18;
       border: 1px solid var(--border-strong);
       color: #fff;
-      border-radius: 3px;
-      padding: 2px 4px;
-      font-family: ui-monospace, monospace;
-      font-size: 0.75rem;
-      width: 40px;
+      border-radius: 4px;
+      padding: 3px 6px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.8rem;
+      font-weight: 600;
+      width: 68px;
+      min-width: 68px;
       text-align: center;
       outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+
+    .evolution-control input:focus {
+      border-color: var(--accent-cyan);
+      box-shadow: 0 0 0 1px rgba(6, 182, 212, 0.4);
     }
 
     .btn {
